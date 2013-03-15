@@ -29,31 +29,31 @@
 		init : function(player){
 			
 			var self = this;
-			var elementPrefix = 'gifplay';
+			var prefix = 'gifplay';
 			
 			this.player = player;
 
 			this.elements = {
-				container: $('<div class="'+elementPrefix+'"/>'),
+				container: $('<div class="'+prefix+'"/>'),
 				controls: {
-					container: $('<ul class="'+elementPrefix+'-controls"/>'),
-					previous: $('<li class="'+elementPrefix+'-previous"><a href="#">Previous</a></li>'),
-					play: $('<li class="'+elementPrefix+'-play"><a href="#">Play</a></li>'),
-					pause: $('<li class="'+elementPrefix+'-pause"><a href="#">Pause</a></li>'),
-					stop: $('<li class="'+elementPrefix+'-stop"><a href="#">Stop</a></li>'),
-					next: $('<li class="'+elementPrefix+'-next"><a href="#">Next</a></li>'),
-					fullscreen: $('<li class="'+elementPrefix+'-fullscreen"><a href="#">Fullscreen</a></li>'),
+					container: $('<ul class="'+prefix+'-controls"/>'),
+					previous: $('<li class="'+prefix+'-previous '+prefix+'-icon '+prefix+'-icon-previous"><a href="#"></a></li>'),
+					play: $('<li class="'+prefix+'-play '+prefix+'-icon '+prefix+'-icon-play"><a href="#"></a></li>'),
+					pause: $('<li class="'+prefix+'-pause '+prefix+'-icon '+prefix+'-icon-pause"><a href="#"></a></li>'),
+					stop: $('<li class="'+prefix+'-stop '+prefix+'-icon '+prefix+'-icon-stop"><a href="#"></a></li>'),
+					next: $('<li class="'+prefix+'-next '+prefix+'-icon '+prefix+'-icon-next"><a href="#"></a></li>'),
+					fullscreen: $('<li class="'+prefix+'-fullscreen"><a href="#">Fullscreen</a></li>'),
 					scrub: {
-						container: $('<li class="'+elementPrefix+'-scrub"><a href="#"></a></li>'),
-						fill: $('<span class="'+elementPrefix+'-scrub-fill"></span>')
+						container: $('<li class="'+prefix+'-scrub"><a href="#"></a></li>'),
+						fill: $('<span class="'+prefix+'-scrub-fill"></span>')
 					},
 					extended: {
-						size: $('<li class="'+elementPrefix+'-slider"><label>Size</label><input type="range" min="1" max="100" step="1" class="'+elementPrefix+'-size"/><span class="value"></span></li>'),
-						speed: $('<li class="'+elementPrefix+'-slider"><label class="'+elementPrefix+'-speedreset">Speed</label></label><input type="range" min="0.1" max="8" step="0.1" class="'+elementPrefix+'-speed"/><span class="value"></span></li>'),
-						loop: $('<li class="'+elementPrefix+'-loop"><a href="#">Loop</a></li>'),
-						pingpong: $('<li class="'+elementPrefix+'-pingpong"><a href="#">Ping-pong</a></li>'),
-						noloop: $('<li class="'+elementPrefix+'-noloop"><a href="#">No loop</a></li>'),
-						reverse: $('<li class="'+elementPrefix+'-reverse disabled"><a href="#">Reverse</a></li>'),
+						size: $('<li class="'+prefix+'-slider"><label>Size</label><input type="range" min="1" max="100" step="1" class="'+prefix+'-size"/><span class="value"></span></li>'),
+						speed: $('<li class="'+prefix+'-slider"><label class="'+prefix+'-speedreset">Speed</label></label><input type="range" min="0.1" max="8" step="0.1" class="'+prefix+'-speed"/><span class="value"></span></li>'),
+						loop: $('<li class="'+prefix+'-loop"><a href="#">Loop</a></li>'),
+						pingpong: $('<li class="'+prefix+'-pingpong"><a href="#">Ping-pong</a></li>'),
+						noloop: $('<li class="'+prefix+'-noloop"><a href="#">No loop</a></li>'),
+						reverse: $('<li class="'+prefix+'-reverse disabled"><a href="#">Reverse</a></li>'),
 					}
 				}
 			};
@@ -86,31 +86,29 @@
 			$(this.elements.controls.scrub.container).find('a')
 				.append(this.elements.controls.scrub.fill);
 
+			/* Control elements event handlers. */
+
 			$(this.player.canvas).click(function(){
 				self.player.togglePlay();
 			});
 			$(this.elements.controls.previous).click(function(){
-				if (!self.player.playing)
-					self.player.showPreviousFrame();
+				self.previous();
 				return false;
 			});
 			$(this.elements.controls.next).click(function(){
-				if (!self.player.playing)
-					self.player.showNextFrame();
+				self.next();
 				return false;
 			});
 			$(this.elements.controls.play).click(function(){
-				if (!self.player.playing)
-					self.player.play();
+				self.play();
 				return false;
 			});
 			$(this.elements.controls.pause).click(function(){
-				if (self.player.playing)
-					self.player.pause();
+				self.pause();
 				return false;
 			});
 			$(this.elements.controls.stop).click(function(){
-				self.player.stop();
+				self.stop();
 				return false;
 			});
 			$(this.elements.controls.fullscreen).click(function(){
@@ -132,10 +130,8 @@
 				self.player.setSpeed($(this).find('input').val());
 				return false;
 			});
-			$(this.elements.controls.container).find('.'+elementPrefix+'-speedreset').click(function(){
-				var speed = $(self.elements.controls.extended.speed).find('input').val();
-				var newSpeed = speed < 8 ? Math.pow(2, Math.round(log2(speed))+1) : 0.25;
-				self.player.setSpeed(newSpeed);
+			$(this.elements.controls.container).find('.'+prefix+'-speedreset').click(function(){
+				self.toggleSpeed();
 				return false;
 			});
 			var scrubMouseDown = function(e){
@@ -154,6 +150,9 @@
 				});
 				return false;
 			});
+
+			/* GIFPlayer event handlers. */
+
 			this.player.on(GIFPlayer.GIF_EVENT_SET_FRAME, function(e){
 				self.setScrub(e);
 			});
@@ -201,8 +200,12 @@
 				$(self.elements.controls.extended.speed).find('input').val(e);
 				$(self.elements.controls.extended.speed).find('.value').text(formattedNumber(e, 1));
 			});
+
+			/* Some settings. */
+
 			this.player.setLoopMode(GIFPlayer.LOOP_NORMAL);
 			this.player.setSpeed(1.0);
+
 			$(window).resize(function(){ self.resize(); });
 		},
 
@@ -230,7 +233,33 @@
 		},
 
 		play : function() {
-			this.player.play();
+			if (!this.player.playing)
+				this.player.play();
+		},
+
+		pause : function() {
+			if (this.player.playing)
+				this.player.pause();
+		},
+
+		stop : function() {
+			this.player.stop();
+		},
+
+		next : function() {
+			if (!this.player.playing)
+				this.player.showNextFrame();
+		},
+
+		previous : function() {
+			if (!this.player.playing)
+				this.player.showPreviousFrame();
+		},
+
+		toggleSpeed : function() {
+			var speed = $(this.elements.controls.extended.speed).find('input').val();
+			var newSpeed = speed < 8 ? Math.pow(2, Math.round(log2(speed))+1) : 0.25;
+			this.player.setSpeed(newSpeed);
 		},
 
 		fullscreen : function() {
@@ -259,7 +288,7 @@
 						self.player.toggleReverse();
 						break;
 					case 83: // S
-						$(self.elements.controls.container).find('.'+elementPrefix+'-speedreset').click();
+						self.toggleSpeed();
 						break;
 				}
 			};

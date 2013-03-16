@@ -1,28 +1,28 @@
 
-function update(tabId) {
-    chrome.tabs.sendMessage(tabId, {}, function(result) {
-        if (result && result.images && result.images.length) {
-            if (result.autostart)
-                play(tabId);
-            chrome.pageAction.show(tabId);
-        } else {
-            chrome.pageAction.hide(tabId);
-        }
-    });
-}
-
-function play(tabId) {
+function insertGIFPlayer(tabId) {
     // Insert GIFPlayer JavaScript/CSS
     chrome.tabs.executeScript(tabId, {file:"gifplayer/lib/DataStream.js"}, function callback(result){});
+    chrome.tabs.executeScript(tabId, {file:"gifplayer/lib/jquery.js"}, function callback(result){});
     chrome.tabs.executeScript(tabId, {file:"gifplayer/src/Utils.js"}, function callback(result){});
     chrome.tabs.executeScript(tabId, {file:"gifplayer/src/LZW.js"}, function callback(result){});
     chrome.tabs.executeScript(tabId, {file:"gifplayer/src/GIF.js"}, function callback(result){});
     chrome.tabs.executeScript(tabId, {file:"gifplayer/src/GIFPlayer.js"}, function callback(result){});
     chrome.tabs.executeScript(tabId, {file:"gifplayer/src/GIFPlayerControls.js"}, function callback(result){});
-    chrome.tabs.insertCSS(tabId,     {file:"gifplayer/src/GIFPlayer.css"}, function callback(){});
+    chrome.tabs.insertCSS(tabId,     {file:"gifplayer/src/css/GIFPlayer.css"}, function callback(){});
     // Insert extension JavaScript
-    chrome.tabs.executeScript(tabId, {file:"js/jquery.min.js"}, function callback(result){});
     chrome.tabs.executeScript(tabId, {file:"js/main.js"}, function callback(result){});
+}
+
+function update(tabId) {
+    chrome.tabs.sendMessage(tabId, {type:'findgif'}, function(result) {
+        if (result && result.images && result.images.length) {
+            if (result.autostart)
+                insertGIFPlayer(tabId);
+            chrome.pageAction.show(tabId);
+        } else {
+            chrome.pageAction.hide(tabId);
+        }
+    });
 }
 
 chrome.tabs.onUpdated.addListener(function(tabId, change, tab) {
@@ -35,5 +35,5 @@ chrome.tabs.getSelected(null, function(tab) {
 });
 
 chrome.pageAction.onClicked.addListener(function(tab) {
-    play();
+    insertGIFPlayer();
 });

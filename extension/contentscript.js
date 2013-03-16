@@ -1,22 +1,36 @@
-
+var getFileExtension = function(url){
+	if (!url)
+		return null;
+	var urlQuery = url.indexOf('?');
+	var urlHash = url.indexOf('#');
+	if (urlQuery > -1 || urlHash > -1)
+		url = url.substr(0, Math.min(urlQuery, urlHash));
+	var urlSlash = url.lastIndexOf('/');
+	if (urlSlash > -1)
+		url = url.substr(urlSlash);
+	var regexp = /^[^.]+\.(.+)$/;
+	var match = url.match(regexp);
+	if (match && match.length >= 2)
+		return match[1];
+	return null;
+}
 var checkPageForGifs = function() {
-	var autostart = false;
 	var result = [];
-	var bodyElement = document.getElementsByTagName('body');
-	if (bodyElement && bodyElement.length &&
-		bodyElement[0].children.length == 1 && bodyElement[0].children[0].tagName == 'IMG') {
+	var autostart = false;
+	var bodyElement = document.getElementsByTagName('BODY');
+	if (bodyElement &&
+		bodyElement.length &&
+		bodyElement[0].children.length == 1 &&
+		bodyElement[0].children[0].tagName == 'IMG') {
 		autostart = true;
 	}
-	var regexp = /^.+\.gif$/;
 	var images = document.getElementsByTagName('img');
 	for (var i = 0; i < images.length; ++i) {
 		var imageSrc = images[i].src;
-		var imageSrcQuery = imageSrc.indexOf('?');
-		var imageSrcHash = imageSrc.indexOf('#');
-		if (imageSrcQuery > -1 || imageSrcHash > -1)
-			imageSrc = imageSrc.substr(0, Math.min(imageSrcQuery, imageSrcHash));
-		if (regexp.test(imageSrc))
+		var imageExt = getFileExtension(imageSrc);
+		if (imageExt == 'gif' || imageExt === null) {
 			result.push(imageSrc);
+		}
 	}
 	return {
 		autostart: autostart,
@@ -26,6 +40,7 @@ var checkPageForGifs = function() {
 
 if (window == top) {
 	chrome.extension.onMessage.addListener(function(req, sender, sendResponse) {
+		// console.log(req);
 		sendResponse(checkPageForGifs());
 	});
 }

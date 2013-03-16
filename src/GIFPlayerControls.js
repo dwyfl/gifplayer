@@ -22,7 +22,7 @@
 
 	/**
 	 * Controls for the GIFPlayer.
-	 * Depends of jQuery for now.
+	 * Requires jQuery (1.9.1), for now.
 	 **/
 	var GIFPlayerControls = Class.extend({
 
@@ -90,6 +90,11 @@
 
 			$(this.player.canvas).click(function(){
 				self.player.togglePlay();
+				return false;
+			});
+			$(this.player.canvas).dblclick(function(){
+				self.fullscreen();
+				return false;
 			});
 			$(this.elements.controls.previous).click(function(){
 				self.previous();
@@ -216,7 +221,6 @@
 			var windowHeight = $(window).height();
 			var windowRatio = $(window).height()/$(window).width();
 			var gifRatio = this.player.gif.header.height/this.player.gif.header.width;
-			console.log($(window).height(), $(window).width(), $(window).height()/$(window).width());
 			if (windowRatio < gifRatio) {
 				$(this.player.canvas).css({height: '100%', width: 'auto', marginTop: 0});
 			} else {

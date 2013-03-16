@@ -1,7 +1,7 @@
 (function(){
 
 	/**
-	 * GIF parser. Partially based on shachaf's jsgif-project:
+	 * GIF parser. Partially based on jsgif by shachaf:
 	 * http://slbkbs.org/jsgif/
 	 * 
 	 * @param ArrayBuffer data Raw GIF data.
@@ -44,7 +44,7 @@
 			this.images = [];
 			this.extensions = [];
 
-			var gceStack = [];
+			var lastGce = null;
 
 			var eof = false;
 			while (!eof) {
@@ -55,7 +55,7 @@
 						this.extensions.push(extension);
 						switch (extension.extType) {
 							case 'gce':
-								gceStack.push(extension);
+								lastGce = extension;
 								break;
 							case 'app':
 								if (extension.applicationIdentifier == 'NETSCAPE')
@@ -66,8 +66,9 @@
 					case 0x2C: // ','
 						var image = this.parseImage();
 						this.images.push(image);
-						if (gceStack.length)
-							image.gce = gceStack.shift();
+						if (lastGce !== null)
+							image.gce = lastGce;
+						lastGce = null;
 						break;
 					case 0x3B: // ';'
 						eof = true;

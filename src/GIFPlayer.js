@@ -29,6 +29,7 @@
 			}
 
 			this.emit(GIFPlayer.GIF_EVENT_INIT);
+			this.setFrame(0);
 		},
 
 		initFrame : function(frame){

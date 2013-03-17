@@ -1,5 +1,40 @@
+#gifplayer > #gifplayer-loader,
+#gifplayer.loading > canvas,
+#gifplayer.loading > #gifplayer-next,
+#gifplayer.loading > #gifplayer-previous,
+#gifplayer.loading > .gifplay-controls {
+	display: none;
+}
+#gifplayer.loading > #gifplayer-loader {
+	display: block;
+}
+
 #gifplayer:hover .gifplay-controls {
 	opacity: 1.0;
+}
+#gifplayer:hover #gifplayer-next,
+#gifplayer:hover #gifplayer-previous {
+	opacity: 0.3;
+}
+#gifplayer-next,
+#gifplayer-previous {
+	-webkit-transition: opacity 0.3s ease-in-out;
+	display: block;
+	opacity: 0;
+}
+#gifplayer-previous {
+	border-color: transparent #ccc transparent transparent;
+}
+#gifplayer-previous:hover {
+	border-color: transparent #fff transparent transparent;
+	opacity: 0.5;
+}
+#gifplayer-next {
+	border-color: transparent transparent transparent #ccc;
+}
+#gifplayer-next:hover {
+	border-color: transparent transparent transparent #fff;
+	opacity: 0.5;
 }
 .gifplay-controls {
 	background-image: -webkit-gradient(linear, left top, left bottom, color-stop(0, rgba(40,40,40,0.7)), color-stop(0.45, rgba(32,32,32,0.7)), color-stop(0.55, rgba(16,16,16,0.7)), color-stop(1, rgba(0,0,0,0.7)));

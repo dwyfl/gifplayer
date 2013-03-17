@@ -51,14 +51,13 @@
 			}
 		},
 
-		parse : function(arrayBuffer, complete, progress, synchronous){
+		parse : function(arrayBuffer, complete, progress){
 
 			if (!(arrayBuffer instanceof ArrayBuffer))
 				throw new Error('GIF: Indata not an ArrayBuffer.');
 			if (this.parsing)
 				throw new Error('GIF: Parsing already in progress.');
-			var self = this;
-			self.parseAsync(arrayBuffer, complete, progress);
+			this.parseAsync(arrayBuffer, complete, progress);
 		},
 
 		parseAsync : function(arrayBuffer, complete, progress){
@@ -110,11 +109,11 @@
 				}
 				self.update();
 				if (!eof) {
-					setTimeout(loop, 0);
+					window.setTimeout(loop, 0);
 				} else {
 					var timeTakenInMs = Math.round((performance.now() - startTimeInMs)*100)*0.01;
 					GIF.log('GIF: Parsing complete in', timeTakenInMs, 'ms.');
-
+					
 					self.parsing = false;
 
 					if (typeof (self.complete) == 'function') {
@@ -123,65 +122,6 @@
 				}
 			};
 			loop();
-		},
-
-		parseMain : function(arrayBuffer, complete, progress){
-
-			GIF.log('GIF: Parsing GIF file ('+ Math.round(arrayBuffer.byteLength/1024,1) +' kb)...');
-			var startTimeInMs = performance.now();
-
-			this.parsing = true;
-			this.data = arrayBuffer;
-			this.stream = new DataStream(arrayBuffer, 0, DataStream.LITTLE_ENDIAN);
-			this.header = this.parseHeader();
-			this.images = [];
-			this.extensions = [];
-			this.complete = complete;
-			this.progress = progress;
-
-			var lastGce = null;
-
-			var eof = false;
-			while (!eof) {
-				var sentinel = this.stream.readUint8();
-				switch (sentinel) {
-					case 0x21: // '!'
-						var extension = this.parseExtension();
-						this.extensions.push(extension);
-						switch (extension.extType) {
-							case 'gce':
-								lastGce = extension;
-								break;
-							case 'app':
-								if (extension.applicationIdentifier == 'NETSCAPE')
-									this.netscapeExtension = extension;
-								break;
-						}
-						break;
-					case 0x2C: // ','
-						var image = this.parseImage();
-						this.images.push(image);
-						if (lastGce !== null)
-							image.gce = lastGce;
-						lastGce = null;
-						break;
-					case 0x3B: // ';'
-						eof = true;
-						break;
-					default:
-						throw new Error('GIF: Invalid GIF file. Unknown block type.');
-				}
-				this.update();
-			}
-
-			var timeTakenInMs = Math.round((performance.now() - startTimeInMs)*100)*0.01;
-			GIF.log('GIF: Parsing complete in', timeTakenInMs, 'ms.');
-
-			this.parsing = false;
-
-			if (typeof (this.complete) == 'function') {
-				this.complete.apply(this, [this]);
-			}
 		},
 
 		parseHeader : function(){

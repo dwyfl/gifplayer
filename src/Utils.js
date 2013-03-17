@@ -1,3 +1,9 @@
+function isArray(arr) {
+  return arr instanceof Array
+      || Array.isArray(arr)
+      || (arr && arr !== Object.prototype && isArray(arr.__proto__));
+}
+
 /* Simple JavaScript Inheritance
  * By John Resig http://ejohn.org/
  * MIT Licensed.

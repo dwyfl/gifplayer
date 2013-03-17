@@ -1,7 +1,9 @@
 
 $(document).ready(function(){
+	var urls = [];
 	$('img').each(function(){
-		var player = new GIFPlayer(this.src);
+		urls.push(this.src);
 		$(this).remove();
 	});
+	var player = new GIFPlayer(urls);
 });

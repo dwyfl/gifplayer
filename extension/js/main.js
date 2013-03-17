@@ -134,7 +134,16 @@
 					// el.setAttribute('height', initialHeight);
 					// el.setAttribute('src', 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIW2OcOXPmfwAGagLMvTrKOwAAAABJRU5ErkJggg==');
 				}
-				new GIFPlayer(el.src);
+				var player = new GIFPlayer(el.src);
+				if (localStorage['size']) {
+					var size = localStorage['size'];
+					player.on(GIFPlayer.LOAD_COMPLETE, function(){
+						player.setSize(size);
+					});
+				}
+				player.on(GIFPlayer.GIF_EVENT_SIZE, function(size){
+					localStorage['size'] = size;
+				});
 			});
 		}
 	}

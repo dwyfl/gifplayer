@@ -4,19 +4,26 @@
 	 * GIF parser. Partially based on jsgif by shachaf:
 	 * http://slbkbs.org/jsgif/
 	 * 
-	 * @param ArrayBuffer data Raw GIF data.
+	 * @param ArrayBuffer Data     Raw GIF data.
+	 * @param function    complete Callback executed when decoding completed.
+	 * @param function    progress Callback executed after reading a block.
 	 */
-	var GIF = function(data) {
+	var GIF = function(data, complete, progress) {
 
 		this.data = null;
 		this.stream = null;
 		this.header = null;
 		this.images = null;
 		this.extensions = null;
+		this.complete = null;
+		this.progress = null;
+		this.parsing = false;
 
 		if (data && (data instanceof ArrayBuffer))
-			this.parse(data);
+			this.parse(data, complete, progress);
 	};
+
+	GIF.logging = true;
 
 	GIF.bitArrayToNum = function(bitArray) {
 		return bitArray.reduce(function(p, n) { return p * 2 + n; }, 0);
@@ -27,22 +34,110 @@
 			arr.push(!!(byte & (1 << i)));
 		return arr;
 	};
+	GIF.log = function(){
+		if (GIF.logging) {
+			console.log.apply(console, arguments);
+		}
+	};
 
 	GIF.prototype = {
 
-		parse : function(arrayBuffer){
+		update : function(){
+			if (typeof (this.progress) == 'function') {
+				var totalBytes = this.stream ? this.stream.byteLength : 0;
+				var readBytes = this.stream ? this.stream.position : 0;
+				var progressAmount = totalBytes != 0 ? (readBytes / totalBytes) : 0;
+				this.progress.apply(this, [ progressAmount, totalBytes, readBytes ]);
+			}
+		},
+
+		parse : function(arrayBuffer, complete, progress, synchronous){
 
 			if (!(arrayBuffer instanceof ArrayBuffer))
 				throw new Error('GIF: Indata not an ArrayBuffer.');
+			if (this.parsing)
+				throw new Error('GIF: Parsing already in progress.');
+			var self = this;
+			self.parseAsync(arrayBuffer, complete, progress);
+		},
 
-			console.log('GIF: Parsing GIF file ('+ Math.round(arrayBuffer.byteLength/1024,1) +' kb)...');
+		parseAsync : function(arrayBuffer, complete, progress){
+
+			GIF.log('GIF: Parsing GIF file ('+ Math.round(arrayBuffer.byteLength/1024,1) +' kb)...');
 			var startTimeInMs = performance.now();
 
+			this.parsing = true;
 			this.data = arrayBuffer;
 			this.stream = new DataStream(arrayBuffer, 0, DataStream.LITTLE_ENDIAN);
 			this.header = this.parseHeader();
 			this.images = [];
 			this.extensions = [];
+			this.complete = complete;
+			this.progress = progress;
+
+			var self = this;
+			var lastGce = null;
+
+			var loop = function(){
+				var eof = false;
+				var sentinel = self.stream.readUint8();
+				switch (sentinel) {
+					case 0x21: // '!'
+						var extension = self.parseExtension();
+						self.extensions.push(extension);
+						switch (extension.extType) {
+							case 'gce':
+								lastGce = extension;
+								break;
+							case 'app':
+								if (extension.applicationIdentifier == 'NETSCAPE')
+									self.netscapeExtension = extension;
+								break;
+						}
+						break;
+					case 0x2C: // ','
+						var image = self.parseImage();
+						self.images.push(image);
+						if (lastGce !== null)
+							image.gce = lastGce;
+						lastGce = null;
+						break;
+					case 0x3B: // ';'
+						eof = true;
+						break;
+					default:
+						throw new Error('GIF: Invalid GIF file. Unknown block type.');
+				}
+				self.update();
+				if (!eof) {
+					setTimeout(loop, 0);
+				} else {
+					var timeTakenInMs = Math.round((performance.now() - startTimeInMs)*100)*0.01;
+					GIF.log('GIF: Parsing complete in', timeTakenInMs, 'ms.');
+
+					self.parsing = false;
+
+					if (typeof (self.complete) == 'function') {
+						self.complete.apply(self, [self]);
+					}
+				}
+			};
+			loop();
+		},
+
+		parseMain : function(arrayBuffer, complete, progress){
+
+			GIF.log('GIF: Parsing GIF file ('+ Math.round(arrayBuffer.byteLength/1024,1) +' kb)...');
+			var startTimeInMs = performance.now();
+
+			this.parsing = true;
+			this.data = arrayBuffer;
+			this.stream = new DataStream(arrayBuffer, 0, DataStream.LITTLE_ENDIAN);
+			this.header = this.parseHeader();
+			this.images = [];
+			this.extensions = [];
+			this.complete = complete;
+			this.progress = progress;
 
 			var lastGce = null;
 
@@ -76,10 +171,17 @@
 					default:
 						throw new Error('GIF: Invalid GIF file. Unknown block type.');
 				}
+				this.update();
 			}
 
 			var timeTakenInMs = Math.round((performance.now() - startTimeInMs)*100)*0.01;
-			console.log('GIF: Parsing complete in', timeTakenInMs, 'ms.');
+			GIF.log('GIF: Parsing complete in', timeTakenInMs, 'ms.');
+
+			this.parsing = false;
+
+			if (typeof (this.complete) == 'function') {
+				this.complete.apply(this, [this]);
+			}
 		},
 
 		parseHeader : function(){

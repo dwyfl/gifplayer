@@ -1,16 +1,135 @@
 (function(){
-
+	
+	var applyStyles = function(element, styles) {
+		for (var i in styles) {
+			element.style[i] = styles[i];
+		}
+	};
+	
 	var GIFPlayer = EventEmitter.extend({
 
-		init : function(gif, canvas){
+		init : function(url){
+			if (typeof (url) != 'undefined')
+				this.load(url);
+		},
+
+		load : function(url){
+			this.loadInit();
+			try {
+				var self = this;
+				var request = new XMLHttpRequest();
+				if (request) {
+					request.onreadystatechange = function(){
+						if (request.readyState == 4) {
+							if (request.status == 200 && request.response) {
+								var gif = new GIF(request.response,
+									function(gif){
+										self.loadComplete(gif);
+									},
+									function(progressAmount, totalBytes, readBytes){
+										self.loadUpdate(progressAmount);
+									}
+								);
+							} else {
+								throw new Error('GIFPlayer: Error in XMLHttpRequest response.');
+							}
+						}
+					};
+					request.open("GET", url, true);
+					request.responseType = 'arraybuffer';
+					try {
+						request.send(null);
+					} catch (e) {
+						throw new Error('GIFPlayer: Error while making XMLHttpRequest.');
+					}
+				} else {
+					throw new Error('GIFPlayer: Could not create XMLHttpRequest.');
+				}
+			} catch (e) {
+				this.loadAbort();
+				throw e;
+			}
+		},
+
+		loadInit: function(){
+			this.emit(GIFPlayer.LOAD_START);
+			// Create elements.
+			var body = document.getElementsByTagName('BODY')[0];
+			if (body) {
+				this.elements = {
+					container: document.createElement("DIV"),
+					loader: document.createElement("DIV"),
+					canvas: document.createElement("CANVAS"),
+					next: document.createElement("A"),
+					previous: document.createElement("A"),
+				};
+				this.elements.container.id = 'gifplayer';
+				this.elements.container.className = 'loading';
+				this.elements.container.appendChild(this.elements.canvas);
+				this.elements.container.appendChild(this.elements.loader);
+				applyStyles(this.elements.container, {
+					position:		'fixed',
+					top:			0,
+					left:			0,
+					bottom:			'auto',
+					right:			'auto',
+					zIndex:			100000,
+					border:			'none',
+					width:			'100%',
+					height:			'100%',
+					background:		'rgba(0,0,0,0.9)',
+					textAlign:		'center'
+				});
+				applyStyles(this.elements.loader, {
+					position:		'fixed',
+					top:			'50%',
+					left:			'50%',
+					bottom:			'auto',
+					right:			'auto',
+					border:			'2px solid #999',
+					borderRadius:	'5px',
+					width:			'50%',
+					height:			'10px',
+					background:		'transparent',
+					textAlign:		'center',
+					margin:			'-5px -25%'
+				});
+				body.appendChild(this.elements.container);
+				// Add eventlisteners.
+				var self = this;
+				window.onresize = function(event) {
+					self.resize();
+				};
+			}
+		},
+
+		loadAbort: function(){
+			var body = document.getElementsByTagName('BODY');
+			if (body && this.elements.container) {
+				body.removeChild(this.elements.container);
+			}
+		},
+
+		loadUpdate: function(progress){
+			var self = this;
+			var percent = Math.min(100, Math.max(0, Math.round(100 * progress)));
+			self.elements.loader.style['backgroundImage'] = 
+				'-webkit-linear-gradient(0deg, #999 '+percent+'%, transparent '+percent+'%)';
+			this.emit(GIFPlayer.LOAD_PROGRESS, progress);
+		},
+
+		loadComplete: function(gif){
 
 			this.gif = gif;
 
-			this.canvas = canvas;
-			this.canvas.width = this.gif.header.width;
-			this.canvas.height = this.gif.header.height;
-			this.canvasContext = this.canvas.getContext('2d');
-			this.canvasImageData = this.canvasContext.getImageData(0, 0, this.canvas.width, this.canvas.height);
+			this.elements.canvas.width = this.gif.header.width;
+			this.elements.canvas.height = this.gif.header.height;
+			this.canvasContext = this.elements.canvas.getContext('2d');
+			this.canvasImageData = this.canvasContext.getImageData(0, 0, this.gif.header.width, this.gif.header.height);
+			this.canvasSize = 1.0;
+			
+			this.elements.container.removeChild(this.elements.loader);
+			this.resize();
 			
 			this.frame = 0;
 			this.frames = [];
@@ -28,8 +147,11 @@
 				this.frameDelay[i] = frame.frameDelay;
 			}
 
-			this.emit(GIFPlayer.GIF_EVENT_INIT);
+			this.emit(GIFPlayer.LOAD_COMPLETE);
+
+			this.controls = new GIFPlayerControls(this);
 			this.setFrame(0);
+			this.play();
 		},
 
 		initFrame : function(frame){
@@ -105,6 +227,19 @@
 				frameImage: frameImageData,
 				frameDelay: this.gif.images.length > 1 ? gifFrameDelay : -1
 			};
+		},
+
+		resize : function() {
+			var windowWidth = window.innerWidth;
+			var windowHeight = window.innerHeight;
+			var windowRatio = windowHeight / windowWidth;
+			var gifRatio = this.gif.header.height / this.gif.header.width;
+			if (windowRatio < gifRatio) {
+				applyStyles(this.elements.canvas, {height: '100%', width: 'auto', marginTop: 0});
+			} else {
+				var height = gifRatio * windowWidth;
+				applyStyles(this.elements.canvas, {height: 'auto', width: '100%', marginTop: Math.round((windowHeight - height) * 0.5)+'px'});
+			}
 		},
 
 		play : function(){
@@ -222,10 +357,20 @@
 		setSpeed : function(speed){
 			this.playSpeed = Math.min(Math.max(0.1, speed), 8);
 			this.emit(GIFPlayer.GIF_EVENT_SPEED, this.playSpeed);
+		},
+
+		setSize : function(size){
+			this.canvasSize = Math.min(Math.max(0.1, Math.round(size * 100) * 0.01), 1);
+			this.elements.canvas.style['webkitTransform'] = 'scale('+this.canvasSize+')';
+			this.emit(GIFPlayer.GIF_EVENT_SIZE, this.canvasSize);
 		}
 
 	});
 	
+	GIFPlayer.LOAD_START = 'load_START';
+	GIFPlayer.LOAD_PROGRESS = 'load_progress';
+	GIFPlayer.LOAD_COMPLETE = 'load_complete';
+
 	GIFPlayer.LOOP_OFF = 'loop_off';
 	GIFPlayer.LOOP_NORMAL = 'loop_normal';
 	GIFPlayer.LOOP_PING_PONG = 'loop_ping_pong';
@@ -237,10 +382,10 @@
 	GIFPlayer.GIF_EVENT_NEXT_FRAME = 'next_frame';
 	GIFPlayer.GIF_EVENT_PREVIOUS_FRAME = 'previous_frame';
 	GIFPlayer.GIF_EVENT_NEXT_FRAME = 'next_frame';
-	GIFPlayer.GIF_EVENT_INIT = 'init';
 	GIFPlayer.GIF_EVENT_REVERSE = 'reverse';
 	GIFPlayer.GIF_EVENT_LOOP = 'loop';
 	GIFPlayer.GIF_EVENT_SPEED = 'speed';
+	GIFPlayer.GIF_EVENT_SIZE = 'size';
 	
 	this.GIFPlayer = this.GIFPlayer || GIFPlayer;
 

@@ -113,60 +113,30 @@
 			});
 		}
 	};
-	var loadImage = function(imageElement){
-		var request = new XMLHttpRequest();
-		if (request && imageElement){
-			request.onreadystatechange = function(){
-				if (request.readyState == 4) {
-					loadImageComplete(request, imageElement);
+
+	var autostart = false;
+	var bodyElement = document.getElementsByTagName('BODY');
+	if (bodyElement &&
+		bodyElement.length &&
+		bodyElement[0].children.length == 1 &&
+		bodyElement[0].children[0].tagName == 'IMG') {
+		autostart = true;
+	}
+	if (autostart) {
+		var images = document.getElementsByTagName('img');
+		for (var i = 0; i < images.length; ++i) {
+			ifGif(images[i], function(el){
+				var parent = el.parentNode;
+				if (parent) {
+					parent.removeChild(el);
+					// el.setAttribute('data-src', el.src);
+					// el.setAttribute('width', initialWidth);
+					// el.setAttribute('height', initialHeight);
+					// el.setAttribute('src', 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIW2OcOXPmfwAGagLMvTrKOwAAAABJRU5ErkJggg==');
 				}
-			};
-			request.open("GET", imageElement.src, true);
-			request.responseType = 'arraybuffer';
-			try { request.send(null); } catch(e) {}
+				new GIFPlayer(el.src);
+			});
 		}
-	};
-	var loadImageComplete = function(request, image){
-		if (request &&
-			request.status == 200 &&
-			request.response &&
-			request.responseType == 'arraybuffer') {
-			
-			var autostart = false;
-			var bodyElement = document.getElementsByTagName('BODY');
-			if (bodyElement &&
-				bodyElement.length &&
-				bodyElement[0].children.length == 1 &&
-				bodyElement[0].children[0].tagName == 'IMG') {
-				autostart = true;
-			}
-
-			var initialWidth = image.style.width || image.width;
-			var initialHeight = image.style.height || image.height;
-			var canvas = document.createElement("CANVAS");
-			var parent = image.parentNode;
-			if (parent) {
-				parent.insertBefore(canvas, image);
-				parent.removeChild(image);
-			} else return;
-
-			var gif = new GIF(request.response);
-			var player = new GIFPlayer(gif, canvas);
-			var controls = new GIFPlayerControls(player);
-
-			player.canvas.style.width = initialWidth;
-			player.canvas.style.height = initialHeight;
-
-			if (autostart) {
-				controls.play();
-				controls.fullscreen();
-			}
-		}
-	};
-
-	var images = document.getElementsByTagName('img');
-	for (var i = 0; i < images.length; ++i) {
-		ifGif(images[i], function(el){ loadImage(el); });
 	}
 
 })();

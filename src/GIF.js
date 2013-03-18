@@ -77,6 +77,9 @@
 
 			var self = this;
 			var lastGce = null;
+			var updateTime = performance.now();
+
+			this.update();
 
 			var loop = function(){
 				try {
@@ -112,7 +115,10 @@
 						default:
 							throw new Error('GIF: Invalid GIF file. Unknown block type.');
 					}
-					self.update();
+					if (performance.now() - updateTime > 100) {
+						updateTime = performance.now();
+						self.update();
+					}
 					if (!eof) {
 						window.setTimeout(loop, 0);
 					} else {

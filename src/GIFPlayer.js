@@ -5,14 +5,27 @@
 			element.style[i] = styles[i];
 		}
 	};
+	var setDefaults = function(object, defaults) {
+		if (!object)
+			object = {};
+		for (var i in defaults) {
+			if (!object.hasOwnProperty(i))
+				object[i] = defaults[i];
+		}
+		return object;
+	};
 	
 	var GIFPlayer = EventEmitter.extend({
 
-		init : function(urls){
+		init : function(urls, options){
+			options = setDefaults(options, {
+				speed: 1.0,
+				size: 1.0
+			});
 			this.urls = [];
 			this.urlIndex = -1;
-			this.canvasSize = 1.0;
-			this.playSpeed = 1.0;
+			this.canvasSize = options.size;
+			this.playSpeed = options.speed;
 			this.loading = false;
 			this.setupElements();
 			this.controls = new GIFPlayerControls(this);
@@ -51,11 +64,11 @@
 					left:			0,
 					bottom:			'auto',
 					right:			'auto',
-					zIndex:			100000,
+					zIndex:			2147483647,
 					border:			'none',
 					width:			'100%',
 					height:			'100%',
-					background:		'rgba(0,0,0,0.9)',
+					background:		'black',
 					textAlign:		'center'
 				});
 				applyStyles(this.elements.loader, {
@@ -98,7 +111,7 @@
 				});
 				applyStyles(this.elements.status, {
 					position:			'relative',
-					top:				'25%',
+					top:				'35%',
 					left:				'auto',
 					bottom:				'auto',
 					right:				'auto',
@@ -106,17 +119,21 @@
 					textAlign:			'center',
 					fontFamily:			'"Helvetica Neue", Helvetica, sans-serif',
 					fontWeight:			'normal',
-					fontSize:			'20px',
-					lineHeight:			'1em',
-					margin:				'0px 15%',
-					color: 				'#fff',
-					padding:			'10px 20px'
+					fontSize:			'16px',
+					lineHeight:			'1.25em',
+					margin:				'0px 20%',
+					color: 				'#ccc',
+					padding:			'10px 20px',
+					wordWrap: 			'break-word'
 				});
 				body.appendChild(this.elements.container);
 				// Add eventlisteners.
 				var self = this;
 				window.onresize = function(event) {
 					self.resize();
+				};
+				window.onmousemove = function(event) {
+					self.mouseMove();
 				};
 				this.elements.next.onclick = function(){
 					self.loadNext();
@@ -195,19 +212,24 @@
 			this.loading = true;
 			this.elements.container.className = 'loading';
 			this.elements.loader.style['backgroundImage'] = 'none';
-			this.elements.status.style.display = 'none';
+			this.elements.status.innerText = 'Loading "'+this.urls[this.urlIndex]+'" ...';
+			this.elements.status.style.display = 'block';
 		},
 
 		loadNext: function(){
-			this.stop();
-			this.urlIndex = this.urlIndex >= this.urls.length - 1 ? 0 : this.urlIndex + 1;
-			this.loadUrl(this.urls[this.urlIndex]);
+			if (this.urls.length > 1 && !this.loading) {
+				this.stop();
+				this.urlIndex = this.urlIndex >= this.urls.length - 1 ? 0 : this.urlIndex + 1;
+				this.loadUrl(this.urls[this.urlIndex]);
+			}
 		},
 
 		loadPrevious: function(){
-			this.stop();
-			this.urlIndex = this.urlIndex <= 0 ? this.urls.length - 1 : this.urlIndex - 1;
-			this.loadUrl(this.urls[this.urlIndex]);
+			if (this.urls.length > 1 && !this.loading) {
+				this.stop();
+				this.urlIndex = this.urlIndex <= 0 ? this.urls.length - 1 : this.urlIndex - 1;
+				this.loadUrl(this.urls[this.urlIndex]);
+			}
 		},
 
 		loadAbort: function(){
@@ -254,7 +276,7 @@
 			
 			this.setFrame(0);
 			this.setSpeed(this.playSpeed);
-			this.setSize(this.canvasSize);
+			// this.setSize(this.canvasSize);
 			this.setLoopMode(GIFPlayer.LOOP_NORMAL);
 			this.loading = false;
 
@@ -284,29 +306,40 @@
 			var gifFrameDelay = gifGce.delayTime ? Math.max(1000/60, gifGce.delayTime * 10) : 1000/60;
 
 			var srcOffset, dstOffset;
-			var previousFrame = this.gif.images[frame - 1];
+			var previousFrame = this.frames[frame - 1];
 			var previousDisposalMethod = frame == 0 ? 0 : getDisposalMethod(frame - 1);
 
 			switch (previousDisposalMethod) {
 				default:
 				case 0:
 					// No disposal specified. The decoder is not required to take any action.
-					break;
+					if (frame == 0)
+						break;
 				case 1:
 					// Do not dispose. The graphic is to be left in place.
-					frameImageView.set(new Uint32Array(this.frames[frame - 1]));
+					frameImageView.set(new Uint32Array(previousFrame));
 					break;
 				case 2:
 					// Restore to background color. The area used by the graphic must be
 					// restored to the background color.
 					// TODO: This should really only cover the area of
 					//       gifImage.height * gifImage.width, and not the whole image.
-					var offset = 0;
+					var offset;
+					if (frame != 0) {
+						offset = 0;
+						var previousFrameView = new Uint32Array(previousFrame);
+						for (var y = 0; y < gifHeader.height; ++y) {
+							for (var x = 0; x < gifHeader.width; ++x, ++offset) {
+								frameImageView[offset] = previousFrameView[offset];
+							}
+						}
+					}
 					var backgroundColor = gifColorTable[gifHeader.backgroundColorIndex];
 					if (gifHeader.backgroundColorIndex == gifTransparentColorIndex)
 						backgroundColor = backgroundColor & 0x00ffffff;
-					for (var y = 0; y < gifHeader.height; ++y) {
-						for (var x = 0; x < gifHeader.width; ++x, ++offset) {
+					offset = gifImage.top * gifHeader.width + gifImage.left;
+					for (var y = 0; y < gifImage.height; ++y) {
+						for (var x = 0; x < gifImage.width; ++x, ++offset) {
 							frameImageView[offset] = backgroundColor;
 						}
 					}
@@ -316,7 +349,7 @@
 					// overwritten by the graphic with what was there prior to rendering
 					// the graphic.
 					// TODO: Fix this.
-					frameImageView.set(new Uint32Array(this.frames[frame - 1]));
+					frameImageView.set(new Uint32Array(previousFrame));
 					break;
 			}
 	
@@ -350,6 +383,22 @@
 					applyStyles(this.elements.canvas, {height: 'auto', width: '100%', marginTop: Math.round((windowHeight - height) * 0.5)+'px'});
 				}
 			}
+		},
+
+		mouseMove : function(e) {
+			if (this.mouseMoveTimer)
+				clearTimeout(this.mouseMoveTimer);
+			if (!this.loading) {
+				this.elements.container.className = 'controls';
+			}
+			this.mouseMoveTimer = setTimeout((function(self){
+				return function(){
+					self.mouseMoveTimer = null;
+					if (!self.loading) {
+						self.elements.container.className = '';
+					}
+				};
+			})(this), 1000);
 		},
 
 		play : function(){
@@ -480,7 +529,14 @@
 		getSize : function(){ return this.canvasSize; },
 
 		close : function(){
+			this.emit(GIFPlayer.GIF_EVENT_CLOSE);
+			this.elements.container.parentNode.removeChild(this.elements.container);
+		},
 
+		addUrl : function(url) {
+			this.urls.push(url);
+			this.elements.previous.style['visibility'] = 'visible';
+			this.elements.next.style['visibility'] = 'visible';
 		}
 
 	});
@@ -504,6 +560,7 @@
 	GIFPlayer.GIF_EVENT_LOOP = 'loop';
 	GIFPlayer.GIF_EVENT_SPEED = 'speed';
 	GIFPlayer.GIF_EVENT_SIZE = 'size';
+	GIFPlayer.GIF_EVENT_CLOSE = 'close';
 	
 	this.GIFPlayer = this.GIFPlayer || GIFPlayer;
 

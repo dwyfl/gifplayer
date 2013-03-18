@@ -1,16 +1,18 @@
 
+var inserted = {};
+
 function insertGIFPlayer(tabId) {
     // Insert GIFPlayer JavaScript/CSS
-    chrome.tabs.executeScript(tabId, {file:"gifplayer/lib/DataStream.js"}, function callback(result){});
-    chrome.tabs.executeScript(tabId, {file:"gifplayer/lib/jquery.js"}, function callback(result){});
-    chrome.tabs.executeScript(tabId, {file:"gifplayer/src/Utils.js"}, function callback(result){});
-    chrome.tabs.executeScript(tabId, {file:"gifplayer/src/LZW.js"}, function callback(result){});
-    chrome.tabs.executeScript(tabId, {file:"gifplayer/src/GIF.js"}, function callback(result){});
-    chrome.tabs.executeScript(tabId, {file:"gifplayer/src/GIFPlayer.js"}, function callback(result){});
-    chrome.tabs.executeScript(tabId, {file:"gifplayer/src/GIFPlayerControls.js"}, function callback(result){});
-    chrome.tabs.insertCSS(tabId,     {file:"gifplayer/src/css/GIFPlayer.css"}, function callback(){});
+    chrome.tabs.executeScript(tabId, {file:"gifplayer/lib/DataStream.js"}, function(result){});
+    chrome.tabs.executeScript(tabId, {file:"gifplayer/lib/jquery.js"}, function(result){});
+    chrome.tabs.executeScript(tabId, {file:"gifplayer/src/Utils.js"}, function(result){});
+    chrome.tabs.executeScript(tabId, {file:"gifplayer/src/LZW.js"}, function(result){});
+    chrome.tabs.executeScript(tabId, {file:"gifplayer/src/GIF.js"}, function(result){});
+    chrome.tabs.executeScript(tabId, {file:"gifplayer/src/GIFPlayer.js"}, function(result){});
+    chrome.tabs.executeScript(tabId, {file:"gifplayer/src/GIFPlayerControls.js"}, function(result){});
+    chrome.tabs.insertCSS(tabId,     {file:"gifplayer/src/css/GIFPlayer.css"}, function(){});
     // Insert extension JavaScript
-    chrome.tabs.executeScript(tabId, {file:"js/main.js"}, function callback(result){});
+    chrome.tabs.executeScript(tabId, {file:"js/main.js"}, function(result){});
 }
 
 function update(tabId) {
@@ -35,5 +37,5 @@ chrome.tabs.getSelected(null, function(tab) {
 });
 
 chrome.pageAction.onClicked.addListener(function(tab) {
-    insertGIFPlayer();
+    insertGIFPlayer(tab.id);
 });

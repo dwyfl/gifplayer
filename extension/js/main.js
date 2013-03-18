@@ -113,44 +113,53 @@
 			});
 		}
 	};
-
-	var autostart = false;
-	var bodyElement = document.getElementsByTagName('BODY');
-	if (bodyElement &&
-		bodyElement.length &&
-		bodyElement[0].children.length == 1 &&
-		bodyElement[0].children[0].tagName == 'IMG') {
-		autostart = true;
-	}
-	if (autostart) {
+	var running = false;
+	var start = function(){
+		if (running)
+			return;
 		var images = document.getElementsByTagName('img');
+		var loadedImages = [];
+		var player = null;
 		for (var i = 0; i < images.length; ++i) {
 			ifGif(images[i], function(el){
-				var parent = el.parentNode;
-				if (parent) {
-					parent.removeChild(el);
-					// el.setAttribute('data-src', el.src);
-					// el.setAttribute('width', initialWidth);
-					// el.setAttribute('height', initialHeight);
-					// el.setAttribute('src', 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIW2OcOXPmfwAGagLMvTrKOwAAAABJRU5ErkJggg==');
-				}
-				var player = new GIFPlayer(el.src);
-				chrome.storage.sync.get(null, function(settings){
-					if (settings['size']) {
-						if (player.loading) {
-							player.on(GIFPlayer.LOAD_COMPLETE, function(){
-								player.setSize(settings['size']);
-							});
-						} else {
-							player.setSize(settings['size']);
+				el.style['visibility'] = 'hidden';
+				loadedImages.push(el);
+				if (player === null) {
+					player = new GIFPlayer(el.src);
+					player.once(GIFPlayer.GIF_EVENT_CLOSE, function(){
+						player = null;
+						running = false;
+						for (var i = 0; i < loadedImages.length; ++i) {
+							loadedImages[i].style['visibility'] = null;
 						}
-					}
-				});
-				player.on(GIFPlayer.GIF_EVENT_SIZE, function(size){
-					chrome.storage.sync.set({'size': size});
-				});
+					});
+					chrome.storage.sync.get(null, function(settings){
+						if (settings['size']) {
+							if (player.loading) {
+								player.once(GIFPlayer.LOAD_COMPLETE, function(){
+									player.setSize(settings['size']);
+								});
+							} else {
+								player.setSize(settings['size']);
+							}
+						}
+					});
+					player.on(GIFPlayer.GIF_EVENT_SIZE, function(size){
+						chrome.storage.sync.set({'size': size});
+					});
+					running = true;
+				} else {
+					player.addUrl(el.src);
+				}
 			});
 		}
-	}
+	};
+
+	chrome.extension.onMessage.addListener(function(req, sender, sendResponse) {
+		if (req.type == 'start')
+			start();
+	});
+	
+	start();
 
 })();

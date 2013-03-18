@@ -40,7 +40,6 @@ var checkPageForGifs = function() {
 
 if (window == top) {
 	chrome.extension.onMessage.addListener(function(req, sender, sendResponse) {
-		// console.log(req);
 		sendResponse(checkPageForGifs());
 	});
 }

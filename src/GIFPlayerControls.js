@@ -29,11 +29,11 @@
 		init : function(player){
 			
 			var self = this;
-			var prefix = 'gifplay';
+			var prefix = 'gifplayer';
 			
 			this.player = player;
 			this.elements = {
-				container: $('<ul class="'+prefix+'-controls"/>'),
+				container: $('<ul id="'+prefix+'-controls"/>'),
 				previous: $('<li class="'+prefix+'-previous '+prefix+'-icon '+prefix+'-icon-previous"><a href="#" title="Previous frame (left arrow)"></a></li>'),
 				play: $('<li class="'+prefix+'-play '+prefix+'-icon '+prefix+'-icon-play"><a href="#" title="Play (space)"></a></li>'),
 				pause: $('<li class="'+prefix+'-pause '+prefix+'-icon '+prefix+'-icon-pause"><a href="#" title="Pause (space)"></a></li>'),
@@ -181,24 +181,30 @@
 				else
 					$(self.elements.extended.reverse).addClass('disabled');
 			});
-			this.player.on(GIFPlayer.GIF_EVENT_SPEED, function(e){
-				$(self.elements.extended.speed).find('input').val(e);
-				$(self.elements.extended.speed).find('.value').text(formattedNumber(e, 1));
-			});
-			this.player.on(GIFPlayer.GIF_EVENT_SIZE, function(e){
-				$(self.elements.extended.size).find('input').val(e);
-				$(self.elements.extended.size).find('.value').text(Math.round(e*100)+'%');
-			});
+			var onSetSpeed = function(speed){
+				$(self.elements.extended.speed).find('input').val(speed);
+				$(self.elements.extended.speed).find('.value').text(formattedNumber(speed, 1));
+			};
+			var onSetSize = function(size){
+				$(self.elements.extended.size).find('input').val(size);
+				$(self.elements.extended.size).find('.value').text(Math.round(size*100)+'%');
+			};
+			this.player.on(GIFPlayer.GIF_EVENT_SPEED, onSetSpeed);
+			this.player.on(GIFPlayer.GIF_EVENT_SIZE, onSetSize);
+
+			onSetSpeed(this.player.getSpeed());
+			onSetSize(this.player.getSize());
 
 			/* Short keys. */
 
 			$(document).on('keydown', function(e) {
 				switch (e.which) {
 					case 27: // esc
-						self.stop();
+						self.player.close();
 						break;
 					case 32: // space
 						self.player.togglePlay();
+						return false;
 						break;
 					case 37: // <-
 						if (e.shiftKey) {

@@ -10,6 +10,7 @@
 		this.buffer = arrayBuffer;
 		this.byteBuffer = new Uint8Array(arrayBuffer);
 		this.position = 0;
+		this.bytePosition = 0;
 	};
 	BitStream.prototype = {
 
@@ -36,17 +37,20 @@
 		},
 
 		read : function(length) {
+			if (this.bytePosition >= this.byteBuffer.byteLength)
+				return null;
 			var value = 0;
 			var bitsRead = 0;
 			var bitsOffset = this.position & 0x07;
-			var bytePosition = this.position >> 3;
+			var bytePositionTemp = this.bytePosition;
 			while (bitsRead < bitsOffset + length) {
-				value = value | (this.byteBuffer[bytePosition++] << bitsRead);
+				value = value | (this.byteBuffer[bytePositionTemp++] << bitsRead);
 				bitsRead += 8;
 			}
 			value = value >> bitsOffset;
 			value = value & ((1 << length) - 1);
 			this.position += length;
+			this.bytePosition = this.position >> 3;
 			return value;
 		}
 	};
@@ -97,6 +101,7 @@
 		var K_CLR = 1 << minCodeSize;
 		var K_EOD = K_CLR + 1;
 		var K_NEW = K_EOD + 1;
+		var K_EOF = null;
 
 		// In- and out streams
 
@@ -127,6 +132,11 @@
 
 			code = inStream.read(bits);
 
+			if (code == K_EOF) {
+				// console.log('LZW: Unexpected end of stream.');
+				// throw new Error('LZW: Unexpected end of stream.');
+				break;
+			}
 			if (code == K_EOD)
 				break;
 			if (code == K_CLR) {

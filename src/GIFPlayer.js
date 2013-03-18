@@ -29,6 +29,7 @@
 					canvas: document.createElement("CANVAS"),
 					next: document.createElement("A"),
 					previous: document.createElement("A"),
+					status: document.createElement("div")
 				};
 				this.elements.container.id = 'gifplayer';
 				this.elements.loader.id = 'gifplayer-loader';
@@ -36,6 +37,7 @@
 				this.elements.container.appendChild(this.elements.loader);
 				this.elements.container.appendChild(this.elements.previous);
 				this.elements.container.appendChild(this.elements.next);
+				this.elements.container.appendChild(this.elements.status);
 				this.elements.next.href = '#';
 				this.elements.next.id = 'gifplayer-next';
 				this.elements.next.title = 'Next GIF (shift + right arrow)';
@@ -93,6 +95,22 @@
 					borderWidth: 		'40px 20px 40px 0',
 					margin:				'-40px 0'
 				});
+				applyStyles(this.elements.status, {
+					position:			'relative',
+					top:				'25%',
+					left:				'auto',
+					bottom:				'auto',
+					right:				'auto',
+					display:			'none',
+					textAlign:			'center',
+					fontFamily:			'"Helvetica Neue", Helvetica, sans-serif',
+					fontWeight:			'normal',
+					fontSize:			'20px',
+					lineHeight:			'1em',
+					margin:				'0px 15%',
+					color: 				'#fff',
+					padding:			'10px 20px'
+				});
 				body.appendChild(this.elements.container);
 				// Add eventlisteners.
 				var self = this;
@@ -108,6 +126,11 @@
 					return false;
 				};
 			}
+		},
+
+		error : function(error){
+			this.elements.status.style.display = 'block';
+			this.elements.status.innerText = error;
 		},
 
 		load : function(urls){
@@ -138,6 +161,9 @@
 									},
 									function(progressAmount, totalBytes, readBytes){
 										self.loadUpdate(progressAmount);
+									},
+									function(error){
+										self.error(error ? error : 'Unknown error.')
 									}
 								);
 							} else {
@@ -157,6 +183,7 @@
 				}
 			} catch (e) {
 				this.loadAbort();
+				this.elements.status.innerText = e ? e.getMessage() : 'Unknown error.';
 				throw e;
 			}
 		},
@@ -165,6 +192,7 @@
 			this.emit(GIFPlayer.LOAD_START);
 			this.elements.container.className = 'loading';
 			this.elements.loader.style['backgroundImage'] = 'none';
+			this.elements.status.style.display = 'none';
 		},
 
 		loadNext: function(){
@@ -180,7 +208,7 @@
 		},
 
 		loadAbort: function(){
-			var body = document.getElementsByTagName('BODY');
+			var body = document.getElementsByTagName('BODY')[0];
 			if (body && this.elements.container) {
 				body.removeChild(this.elements.container);
 			}
@@ -306,15 +334,17 @@
 		},
 
 		resize : function() {
-			var windowWidth = window.innerWidth;
-			var windowHeight = window.innerHeight;
-			var windowRatio = windowHeight / windowWidth;
-			var gifRatio = this.gif.header.height / this.gif.header.width;
-			if (windowRatio < gifRatio) {
-				applyStyles(this.elements.canvas, {height: '100%', width: 'auto', marginTop: 0});
-			} else {
-				var height = gifRatio * windowWidth;
-				applyStyles(this.elements.canvas, {height: 'auto', width: '100%', marginTop: Math.round((windowHeight - height) * 0.5)+'px'});
+			if (this.gif) {
+				var windowWidth = window.innerWidth;
+				var windowHeight = window.innerHeight;
+				var windowRatio = windowHeight / windowWidth;
+				var gifRatio = this.gif.header.height / this.gif.header.width;
+				if (windowRatio < gifRatio) {
+					applyStyles(this.elements.canvas, {height: '100%', width: 'auto', marginTop: 0});
+				} else {
+					var height = gifRatio * windowWidth;
+					applyStyles(this.elements.canvas, {height: 'auto', width: '100%', marginTop: Math.round((windowHeight - height) * 0.5)+'px'});
+				}
 			}
 		},
 

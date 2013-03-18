@@ -8,7 +8,7 @@
 	 * @param function    complete Callback executed when decoding completed.
 	 * @param function    progress Callback executed after reading a block.
 	 */
-	var GIF = function(data, complete, progress) {
+	var GIF = function(data, complete, progress, error) {
 
 		this.data = null;
 		this.stream = null;
@@ -20,7 +20,7 @@
 		this.parsing = false;
 
 		if (data && (data instanceof ArrayBuffer))
-			this.parse(data, complete, progress);
+			this.parse(data, complete, progress, error);
 	};
 
 	GIF.logging = true;
@@ -51,16 +51,16 @@
 			}
 		},
 
-		parse : function(arrayBuffer, complete, progress){
+		parse : function(arrayBuffer, complete, progress, error){
 
 			if (!(arrayBuffer instanceof ArrayBuffer))
 				throw new Error('GIF: Indata not an ArrayBuffer.');
 			if (this.parsing)
 				throw new Error('GIF: Parsing already in progress.');
-			this.parseAsync(arrayBuffer, complete, progress);
+			this.parseAsync(arrayBuffer, complete, progress, error);
 		},
 
-		parseAsync : function(arrayBuffer, complete, progress){
+		parseAsync : function(arrayBuffer, complete, progress, error){
 
 			GIF.log('GIF: Parsing GIF file ('+ Math.round(arrayBuffer.byteLength/1024,1) +' kb)...');
 			var startTimeInMs = performance.now();
@@ -73,51 +73,59 @@
 			this.extensions = [];
 			this.complete = complete;
 			this.progress = progress;
+			this.error = error;
 
 			var self = this;
 			var lastGce = null;
 
 			var loop = function(){
-				var eof = false;
-				var sentinel = self.stream.readUint8();
-				switch (sentinel) {
-					case 0x21: // '!'
-						var extension = self.parseExtension();
-						self.extensions.push(extension);
-						switch (extension.extType) {
-							case 'gce':
-								lastGce = extension;
-								break;
-							case 'app':
-								if (extension.applicationIdentifier == 'NETSCAPE')
-									self.netscapeExtension = extension;
-								break;
+				try {
+					var eof = false;
+					var sentinel = self.stream.readUint8();
+					switch (sentinel) {
+						case 0x21: // '!'
+							var extension = self.parseExtension();
+							self.extensions.push(extension);
+							switch (extension.extType) {
+								case 'gce':
+									lastGce = extension;
+									break;
+								case 'app':
+									if (extension.applicationIdentifier == 'NETSCAPE')
+										self.netscapeExtension = extension;
+									break;
+							}
+							break;
+						case 0x2C: // ','
+							var image = self.parseImage();
+							self.images.push(image);
+							if (lastGce !== null)
+								image.gce = lastGce;
+							lastGce = null;
+							break;
+						case 0x3B: // ';'
+							eof = true;
+							break;
+						case 0x00: // Let's just keep going.
+							GIF.log('GIF: Unexpected block type at '+self.stream.position+', ignoring...');
+							break;
+						default:
+							throw new Error('GIF: Invalid GIF file. Unknown block type.');
+					}
+					self.update();
+					if (!eof) {
+						window.setTimeout(loop, 0);
+					} else {
+						var timeTakenInMs = Math.round((performance.now() - startTimeInMs)*100)*0.01;
+						GIF.log('GIF: Parsing complete in', timeTakenInMs, 'ms.');
+						self.parsing = false;
+						if (typeof (self.complete) == 'function') {
+							self.complete.apply(self, [self]);
 						}
-						break;
-					case 0x2C: // ','
-						var image = self.parseImage();
-						self.images.push(image);
-						if (lastGce !== null)
-							image.gce = lastGce;
-						lastGce = null;
-						break;
-					case 0x3B: // ';'
-						eof = true;
-						break;
-					default:
-						throw new Error('GIF: Invalid GIF file. Unknown block type.');
-				}
-				self.update();
-				if (!eof) {
-					window.setTimeout(loop, 0);
-				} else {
-					var timeTakenInMs = Math.round((performance.now() - startTimeInMs)*100)*0.01;
-					GIF.log('GIF: Parsing complete in', timeTakenInMs, 'ms.');
-					
-					self.parsing = false;
-
-					if (typeof (self.complete) == 'function') {
-						self.complete.apply(self, [self]);
+					}
+				} catch (e) {
+					if (typeof (self.error) == 'function') {
+						self.error.apply(self, [e]);
 					}
 				}
 			};

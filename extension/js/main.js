@@ -135,14 +135,19 @@
 					// el.setAttribute('src', 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIW2OcOXPmfwAGagLMvTrKOwAAAABJRU5ErkJggg==');
 				}
 				var player = new GIFPlayer(el.src);
-				if (localStorage['size']) {
-					var size = localStorage['size'];
-					player.on(GIFPlayer.LOAD_COMPLETE, function(){
-						player.setSize(size);
-					});
-				}
+				chrome.storage.sync.get(null, function(settings){
+					if (settings['size']) {
+						if (player.loading) {
+							player.on(GIFPlayer.LOAD_COMPLETE, function(){
+								player.setSize(settings['size']);
+							});
+						} else {
+							player.setSize(settings['size']);
+						}
+					}
+				});
 				player.on(GIFPlayer.GIF_EVENT_SIZE, function(size){
-					localStorage['size'] = size;
+					chrome.storage.sync.set({'size': size});
 				});
 			});
 		}

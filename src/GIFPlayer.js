@@ -13,6 +13,7 @@
 			this.urlIndex = -1;
 			this.canvasSize = 1.0;
 			this.playSpeed = 1.0;
+			this.loading = false;
 			this.setupElements();
 			this.controls = new GIFPlayerControls(this);
 			if (typeof (urls) != 'undefined')
@@ -154,7 +155,7 @@
 				if (request) {
 					request.onreadystatechange = function(){
 						if (request.readyState == 4) {
-							if (request.status == 200 && request.response) {
+							// if (request.status == 200 && request.response) {
 								var gif = new GIF(request.response,
 									function(gif){
 										self.loadComplete(gif);
@@ -166,9 +167,10 @@
 										self.error(error ? error : 'Unknown error.')
 									}
 								);
-							} else {
-								throw new Error('GIFPlayer: Error in XMLHttpRequest response.');
-							}
+							// } else {
+							// 	console.log(request);
+							// 	throw new Error('GIFPlayer: Error in XMLHttpRequest response.');
+							// }
 						}
 					};
 					request.open("GET", url, true);
@@ -190,6 +192,7 @@
 
 		loadInit: function(){
 			this.emit(GIFPlayer.LOAD_START);
+			this.loading = true;
 			this.elements.container.className = 'loading';
 			this.elements.loader.style['backgroundImage'] = 'none';
 			this.elements.status.style.display = 'none';
@@ -253,6 +256,7 @@
 			this.setSpeed(this.playSpeed);
 			this.setSize(this.canvasSize);
 			this.setLoopMode(GIFPlayer.LOOP_NORMAL);
+			this.loading = false;
 
 			this.emit(GIFPlayer.LOAD_COMPLETE);
 			this.play();

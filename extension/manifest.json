@@ -6,8 +6,8 @@
   "permissions": [
     "tabs",
     "webRequest",
-    "http://*/*",
-    "https://*/*"
+    "storage",
+    "<all_urls>"
   ],
   "content_scripts" : [
     {

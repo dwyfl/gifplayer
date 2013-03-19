@@ -65,7 +65,7 @@
 		parseAsync : function(arrayBuffer, complete, progress, error){
 
 			GIF.log('GIF: Parsing GIF file ('+ Math.round(arrayBuffer.byteLength/1024,1) +' kb)...');
-			var startTimeInMs = performance.now();
+			var startTimeInMs = window.timer();
 
 			this.parsing = true;
 			this.data = arrayBuffer;
@@ -126,7 +126,7 @@
 						}
 					}
 					if (eof) {
-						var timeTakenInMs = Math.round((performance.now() - startTimeInMs)*100)*0.01;
+						var timeTakenInMs = Math.round((window.now() - startTimeInMs)*100)*0.01;
 						GIF.log('GIF: Parsing complete in', timeTakenInMs, 'ms.');
 						self.parsing = false;
 						if (typeof (self.complete) == 'function') {

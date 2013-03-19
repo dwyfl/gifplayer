@@ -40,6 +40,7 @@
 #gifplayer-next:hover {
 	border-color: transparent transparent transparent #fff;
 }
+<<<<<<< HEAD
 #gifplayer.controls > #gifplayer-next,
 #gifplayer.controls > #gifplayer-previous {
 	opacity: 0.3;
@@ -59,9 +60,9 @@
 	right: auto;
 	bottom: 20px;
 	left: 50%;
-	width: 50%;
 	/*min-width: 200px;*/
-	margin: 0 -25%;
+	width: 60%;
+	margin: 0 -30%;
 	box-shadow: 0 4px 10px rgba(0,0,0,0.5);
 	position: absolute;
 	opacity: 0;

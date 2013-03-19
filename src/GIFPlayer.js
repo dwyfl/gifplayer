@@ -400,11 +400,15 @@
 			})(this), 1000);
 		},
 
+		timer : function(){
+			return typeof(performance) != 'undefined' ? performance.now() : (new Date()).getTime();
+		},
+
 		play : function(){
 			if (this.frames.length > 1) {
 				this.playing = true;
-				this.playLastFrame = performance.now();
-				window.requestAnimationFrame(this.step.bind(this));
+				this.playLastFrame = window.timer();
+				window.requestAnimFrame(this.step.bind(this));
 				this.emit(GIFPlayer.GIF_EVENT_PLAY);
 			}
 		},
@@ -429,9 +433,9 @@
 				// We subtract the difference between the supposed and actual frame delay
 				// from the timestamp to continously stay in sync. Never keep a backlog
 				// of more than 0.2s though.
-				this.playLastFrame = performance.now() - Math.min(deltaTime, 200);
+				this.playLastFrame = window.timer() - Math.min(deltaTime, 200);
 			}
-			window.requestAnimationFrame(this.step.bind(this));
+			window.requestAnimFrame(this.step.bind(this));
 		},
 
 		isLastFrame : function(){

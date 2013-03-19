@@ -3,7 +3,19 @@ function isArray(arr) {
       || Array.isArray(arr)
       || (arr && arr !== Object.prototype && isArray(arr.__proto__));
 }
-
+window.requestAnimFrame = (function(){
+  return  window.requestAnimationFrame       ||
+          window.webkitRequestAnimationFrame ||
+          window.mozRequestAnimationFrame    ||
+          function(callback){
+            window.setTimeout(callback, 1000 / 60);
+          };
+})();
+window.timer = (function(){
+  return typeof(performance) != 'undefined' ?
+    function(){ return performance.now(); } :
+    function(){ return (new Date()).getTime(); };
+})();
 /* Simple JavaScript Inheritance
  * By John Resig http://ejohn.org/
  * MIT Licensed.

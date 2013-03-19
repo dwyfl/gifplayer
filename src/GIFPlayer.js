@@ -400,10 +400,6 @@
 			})(this), 1000);
 		},
 
-		timer : function(){
-			return typeof(performance) != 'undefined' ? performance.now() : (new Date()).getTime();
-		},
-
 		play : function(){
 			if (this.frames.length > 1) {
 				this.playing = true;

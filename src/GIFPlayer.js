@@ -82,7 +82,6 @@
 					width:			'50%',
 					height:			'10px',
 					background:		'transparent',
-					textAlign:		'center',
 					margin:			'-5px -25%'
 				});
 				applyStyles(this.elements.next, {

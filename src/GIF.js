@@ -57,7 +57,9 @@
 				throw new Error('GIF: Indata not an ArrayBuffer.');
 			if (this.parsing)
 				throw new Error('GIF: Parsing already in progress.');
-			this.parseAsync(arrayBuffer, complete, progress, error);
+			setTimeout((function(self){
+				return function(){ self.parseAsync(arrayBuffer, complete, progress, error); }
+			})(this), 0);
 		},
 
 		parseAsync : function(arrayBuffer, complete, progress, error){
@@ -76,6 +78,7 @@
 			this.error = error;
 
 			var self = this;
+			var eof = false;
 			var lastGce = null;
 			var updateTime = performance.now();
 
@@ -83,45 +86,46 @@
 
 			var loop = function(){
 				try {
-					var eof = false;
-					var sentinel = self.stream.readUint8();
-					switch (sentinel) {
-						case 0x21: // '!'
-							var extension = self.parseExtension();
-							self.extensions.push(extension);
-							switch (extension.extType) {
-								case 'gce':
-									lastGce = extension;
-									break;
-								case 'app':
-									if (extension.applicationIdentifier == 'NETSCAPE')
-										self.netscapeExtension = extension;
-									break;
-							}
+					while (!eof) {
+						var sentinel = self.stream.readUint8();
+						switch (sentinel) {
+							case 0x21: // '!'
+								var extension = self.parseExtension();
+								self.extensions.push(extension);
+								switch (extension.extType) {
+									case 'gce':
+										lastGce = extension;
+										break;
+									case 'app':
+										if (extension.applicationIdentifier == 'NETSCAPE')
+											self.netscapeExtension = extension;
+										break;
+								}
+								break;
+							case 0x2C: // ','
+								var image = self.parseImage();
+								self.images.push(image);
+								if (lastGce !== null)
+									image.gce = lastGce;
+								lastGce = null;
+								break;
+							case 0x3B: // ';'
+								eof = true;
+								break;
+							case 0x00: // Let's just keep going.
+								GIF.log('GIF: Unexpected block type at '+self.stream.position+', ignoring...');
+								break;
+							default:
+								throw new Error('GIF: Invalid GIF file. Unknown block type.');
+						}
+						if (performance.now() - updateTime > 500) {
+							updateTime = performance.now();
+							self.update();
+							setTimeout(loop, 0);
 							break;
-						case 0x2C: // ','
-							var image = self.parseImage();
-							self.images.push(image);
-							if (lastGce !== null)
-								image.gce = lastGce;
-							lastGce = null;
-							break;
-						case 0x3B: // ';'
-							eof = true;
-							break;
-						case 0x00: // Let's just keep going.
-							GIF.log('GIF: Unexpected block type at '+self.stream.position+', ignoring...');
-							break;
-						default:
-							throw new Error('GIF: Invalid GIF file. Unknown block type.');
+						}
 					}
-					if (performance.now() - updateTime > 100) {
-						updateTime = performance.now();
-						self.update();
-					}
-					if (!eof) {
-						window.setTimeout(loop, 0);
-					} else {
+					if (eof) {
 						var timeTakenInMs = Math.round((performance.now() - startTimeInMs)*100)*0.01;
 						GIF.log('GIF: Parsing complete in', timeTakenInMs, 'ms.');
 						self.parsing = false;
@@ -132,6 +136,8 @@
 				} catch (e) {
 					if (typeof (self.error) == 'function') {
 						self.error.apply(self, [e]);
+					} else {
+						throw e;
 					}
 				}
 			};
@@ -306,7 +312,6 @@
 
 			if (image.localColorTableFlag)
 				image.localColorTable = this.parseColorTable(1 << (image.localColorTableSize + 1))
-
 
 			var lzwMinCodeSize = this.stream.readUint8();
 			var lzwData = this.parseSubBlocks();

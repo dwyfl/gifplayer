@@ -106,7 +106,8 @@
 		// In- and out streams
 
 		var inStream = new BitStream(encoded);
-		var outStream = new DataStream(decoded);
+		var outStream = new Uint8Array(decoded);
+		var outPosition = 0;
 
 		// Dictionary
 
@@ -155,12 +156,12 @@
 			}
 			dictionary.data[nextCode - 1] = c;
 			while (dictionary.back[c]) {
-				outStream.writeUint8(dictionary.data[c]);
+				outStream[outPosition++] = dictionary.data[c];
 				t = dictionary.back[c];
 				dictionary.back[c] = 0;
 				c = t;
 			}
-			outStream.writeUint8(dictionary.data[c]);
+			outStream[outPosition++] = dictionary.data[c];
 
 			if (nextCode++ >= nextShift) {
 				if (bits < LZW_MAX_CODE_SIZE)

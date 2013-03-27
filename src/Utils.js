@@ -1,118 +1,75 @@
-window.isArray = function(arr) {
-  return arr instanceof Array
-      || Array.isArray(arr)
-      || (arr && arr !== Object.prototype && isArray(arr.__proto__));
-}
-window.elementAddClass = function(element, className) {
-  var classString = element.className || '';
-  var classArray = classString.split(' ');
-  for (var i = 0; i < classArray; ++i) {
-    if (classArray[i] == className) {
-      return;
-    }
-  }
-  classArray.push(className);
-  element.className = classArray.join(' ');
-};
-window.elementRemoveClass = function(element, className) {
-  var classString = element.className || '';
-  var classArray = classString.split(' ');
-  var classIndex = -1;
-  for (var i = 0; i < classArray; ++i) {
-    if (classArray[i] == className)
-      classIndex = i;
-  }
-  if (classIndex > -1) {
-    classArray.splice(classIndex, 1);
-    element.className = classArray.join(' ');
-  }
-};
-window.elementCreate = function(elementType, attributes, children) {
-  var element = document.createElement(elementType);
-  for (var i in attributes)
-    element[i] = attributes[i];
-  for (var i = 0; children && i < children.length; ++i) {
-    var childElement = createElementHelper.apply(window, children[i]);
-    element.appendChild(childElement);
-  }
-  return element;
-};
-window.requestAnimFrame = (function(){
-  return  window.requestAnimationFrame       ||
-          window.webkitRequestAnimationFrame ||
-          window.mozRequestAnimationFrame    ||
-          function(callback){
-            window.setTimeout(callback, 1000 / 60);
-          };
-})();
-window.timer = (function(){
-  return typeof(performance) != 'undefined' ?
-    function(){ return performance.now(); } :
-    function(){ return (new Date()).getTime(); };
-})();
-
-/* Simple JavaScript Inheritance
- * By John Resig http://ejohn.org/
- * MIT Licensed.
- */
-// Inspired by base2 and Prototype
 (function(){
-  var initializing = false, fnTest = /xyz/.test(function(){xyz;}) ? /\b_super\b/ : /.*/;
-  // The base Class implementation (does nothing)
-  this.Class = function(){};
-  
-  // Create a new Class that inherits from this class
-  Class.extend = function(prop) {
-    var _super = this.prototype;
-    
-    // Instantiate a base class (but only create the instance,
-    // don't run the init constructor)
-    initializing = true;
-    var prototype = new this();
-    initializing = false;
-    
-    // Copy the properties over onto the new prototype
-    for (var name in prop) {
-      // Check if we're overwriting an existing function
-      prototype[name] = typeof prop[name] == "function" && 
-        typeof _super[name] == "function" && fnTest.test(prop[name]) ?
-        (function(name, fn){
-          return function() {
-            var tmp = this._super;
-            
-            // Add a new ._super() method that is the same method
-            // but on the super-class
-            this._super = _super[name];
-            
-            // The method only need to be bound temporarily, so we
-            // remove it when we're done executing
-            var ret = fn.apply(this, arguments);        
-            this._super = tmp;
-            
-            return ret;
-          };
-        })(name, prop[name]) :
-        prop[name];
-    }
-    
-    // The dummy class constructor
-    function Class() {
-      // All construction is actually done in the init method
-      if ( !initializing && this.init )
-        this.init.apply(this, arguments);
-    }
-    
-    // Populate our constructed prototype object
-    Class.prototype = prototype;
-    
-    // Enforce the constructor to be what we expect
-    Class.prototype.constructor = Class;
 
-    // And make this class extendable
-    Class.extend = arguments.callee;
-    
-    return Class;
+  window.requestAnimFrame = (function(){
+    return window.requestAnimationFrame       ||
+           window.webkitRequestAnimationFrame ||
+           window.mozRequestAnimationFrame    ||
+           function(callback){ window.setTimeout(callback, 1000 / 60); };
+  })();
+  
+  var GIFUtils = {};
+
+  GIFUtils.isArray = function(arr) {
+    return arr instanceof Array
+        || Array.isArray(arr)
+        || (arr && arr !== Object.prototype && isArray(arr.__proto__));
+  }
+  GIFUtils.elementAddClass = function(element, className) {
+    var classString = element.className || '';
+    var classArray = classString.split(' ');
+    for (var i = 0; i < classArray; ++i) {
+      if (classArray[i] == className) {
+        return;
+      }
+    }
+    classArray.push(className);
+    element.className = classArray.join(' ');
   };
+  GIFUtils.elementRemoveClass = function(element, className) {
+    var classString = element.className || '';
+    var classArray = classString.split(' ');
+    var classIndex = -1;
+    for (var i = 0; i < classArray; ++i) {
+      if (classArray[i] == className)
+        classIndex = i;
+    }
+    if (classIndex > -1) {
+      classArray.splice(classIndex, 1);
+      element.className = classArray.join(' ');
+    }
+  };
+  GIFUtils.elementCreate = function(elementType, attributes, styles, children) {
+    var element = document.createElement(elementType);
+    for (var i in attributes)
+      element[i] = attributes[i];
+    if (styles !== undefined)
+      GIFUtils.elementApplyStyles(element, styles);
+    for (var i = 0; children && i < children.length; ++i)
+      element.appendChild(children[i]);
+    return element;
+  };
+  GIFUtils.elementApplyStyles = function(element, styles) {
+    for (var i in styles) {
+      element.style[i] = styles[i];
+    }
+  };
+  GIFUtils.extendObject = function(object, extend, force) {
+    if (!object)
+      object = {};
+    for (var i in extend) {
+      if (!object.hasOwnProperty(i) || force)
+        object[i] = extend[i];
+    }
+    return object;
+  };
+  GIFUtils.timer = (function(){
+    return performance === undefined ?
+      function(){ return (new Date()).getTime(); } :
+      function(){ return performance.now(); };
+  })();
+
+  this.GIFUtils = this.GIFUtils || GIFUtils;
+
 })();
 
 /*
@@ -138,7 +95,7 @@ IN THE SOFTWARE.
 
 (function(){
 
-  this.EventEmitter = Class.extend({});
+  this.EventEmitter = function(){};
 
   // By default EventEmitters will print a warning if more than
   // 10 listeners are added to it. This is a useful default which

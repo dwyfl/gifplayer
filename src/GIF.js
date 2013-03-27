@@ -65,7 +65,7 @@
 		parseAsync : function(arrayBuffer, complete, progress, error){
 
 			GIF.log('GIF: Parsing GIF file ('+ Math.round(arrayBuffer.byteLength/1024,1) +' kb)...');
-			var startTimeInMs = window.timer();
+			var startTimeInMs = GIFUtils.timer();
 
 			this.parsing = true;
 			this.data = arrayBuffer;
@@ -80,7 +80,7 @@
 			var self = this;
 			var eof = false;
 			var lastGce = null;
-			var updateTime = performance.now();
+			var updateTime = GIFUtils.timer();
 
 			this.update();
 
@@ -118,15 +118,15 @@
 							default:
 								throw new Error('GIF: Invalid GIF file. Unknown block type.');
 						}
-						if (performance.now() - updateTime > 500) {
-							updateTime = performance.now();
+						if (GIFUtils.timer() - updateTime > 500) {
+							updateTime = GIFUtils.timer();
 							self.update();
 							setTimeout(loop, 0);
 							break;
 						}
 					}
 					if (eof) {
-						var timeTakenInMs = Math.round((window.now() - startTimeInMs)*100)*0.01;
+						var timeTakenInMs = Math.round((GIFUtils.timer() - startTimeInMs)*100)*0.01;
 						GIF.log('GIF: Parsing complete in', timeTakenInMs, 'ms.');
 						self.parsing = false;
 						if (typeof (self.complete) == 'function') {

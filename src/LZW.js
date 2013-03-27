@@ -88,9 +88,7 @@
 	 * LZW decoder class. Primarily based on C-code from rosettacode.org:
 	 * http://rosettacode.org/wiki/LZW_compression#C
 	 **/
-	var LZW = function(){
-		
-	};
+	var LZW = function(){};
 
 	LZW.dictionary = new LZWDictionary();
 
@@ -134,7 +132,8 @@
 			code = inStream.read(bits);
 
 			if (code == K_EOF) {
-				// console.log('LZW: Unexpected end of stream.');
+				// If we were strict we'd throw an error, but let's just move
+				// along and see what happens. Some GIFs are just corrupt.
 				// throw new Error('LZW: Unexpected end of stream.');
 				break;
 			}

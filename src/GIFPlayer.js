@@ -201,7 +201,7 @@
 				}
 			} catch (e) {
 				this.loadAbort();
-				this.elements.status.innerText = e ? e.getMessage() : 'Unknown error.';
+				this.elements.status.innerText = e || 'Unknown error.';
 				throw e;
 			}
 		},

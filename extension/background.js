@@ -1,6 +1,4 @@
 
-var inserted = {};
-
 function insertGIFPlayer(tabId) {
     // Insert GIFPlayer JavaScript/CSS
     chrome.tabs.executeScript(tabId, {file:"gifplayer/lib/DataStream.js"}, function(result){});
@@ -16,25 +14,33 @@ function insertGIFPlayer(tabId) {
 }
 
 function update(tabId) {
-    chrome.tabs.sendMessage(tabId, {type:'findgif'}, function(result) {
-        if (result && result.images && result.images.length) {
-            if (result.autostart)
-                insertGIFPlayer(tabId);
-            chrome.pageAction.show(tabId);
-        } else {
-            chrome.pageAction.hide(tabId);
-        }
-    });
+    if (typeof(tabId) != 'undefined') {
+        chrome.tabs.sendMessage(tabId, {type:'findgif'}, function(result) {
+            if (result && result.images && result.images.length) {
+                if (result.autostart)
+                    insertGIFPlayer(tabId);
+                chrome.pageAction.show(tabId);
+            } else {
+                chrome.pageAction.hide(tabId);
+            }
+        });
+    }
 }
 
-chrome.tabs.onUpdated.addListener(function(tabId, change, tab) {
-    if (change.status == "complete")
+chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
+    if (changeInfo.status == "complete")
         update(tabId);
 });
 
-chrome.tabs.getSelected(null, function(tab) {
-    update(tab.id);
-});
+chrome.tabs.query(
+    {
+        windowId: chrome.windows.WINDOW_ID_CURRENT,
+        active: true
+    },
+    function(tab) {
+        update(tab.id);
+    }
+);
 
 chrome.pageAction.onClicked.addListener(function(tab) {
     insertGIFPlayer(tab.id);

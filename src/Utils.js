@@ -1,8 +1,42 @@
-function isArray(arr) {
+window.isArray = function(arr) {
   return arr instanceof Array
       || Array.isArray(arr)
       || (arr && arr !== Object.prototype && isArray(arr.__proto__));
 }
+window.elementAddClass = function(element, className) {
+  var classString = element.className || '';
+  var classArray = classString.split(' ');
+  for (var i = 0; i < classArray; ++i) {
+    if (classArray[i] == className) {
+      return;
+    }
+  }
+  classArray.push(className);
+  element.className = classArray.join(' ');
+};
+window.elementRemoveClass = function(element, className) {
+  var classString = element.className || '';
+  var classArray = classString.split(' ');
+  var classIndex = -1;
+  for (var i = 0; i < classArray; ++i) {
+    if (classArray[i] == className)
+      classIndex = i;
+  }
+  if (classIndex > -1) {
+    classArray.splice(classIndex, 1);
+    element.className = classArray.join(' ');
+  }
+};
+window.elementCreate = function(elementType, attributes, children) {
+  var element = document.createElement(elementType);
+  for (var i in attributes)
+    element[i] = attributes[i];
+  for (var i = 0; children && i < children.length; ++i) {
+    var childElement = createElementHelper.apply(window, children[i]);
+    element.appendChild(childElement);
+  }
+  return element;
+};
 window.requestAnimFrame = (function(){
   return  window.requestAnimationFrame       ||
           window.webkitRequestAnimationFrame ||
@@ -16,6 +50,7 @@ window.timer = (function(){
     function(){ return performance.now(); } :
     function(){ return (new Date()).getTime(); };
 })();
+
 /* Simple JavaScript Inheritance
  * By John Resig http://ejohn.org/
  * MIT Licensed.

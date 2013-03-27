@@ -39,7 +39,7 @@ var checkPageForGifs = function() {
 };
 
 if (window == top) {
-	chrome.extension.onMessage.addListener(function(req, sender, sendResponse) {
+	chrome.extension.onMessage.addListener(function(request, sender, sendResponse) {
 		sendResponse(checkPageForGifs());
 	});
 }

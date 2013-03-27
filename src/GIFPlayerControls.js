@@ -33,69 +33,69 @@
 			
 			this.player = player;
 			this.elements = {
-				container: $('<ul id="'+prefix+'-controls"/>'),
-				previous: $('<li class="'+prefix+'-previous '+prefix+'-icon '+prefix+'-icon-previous"><a href="#" title="Previous frame (left arrow)"></a></li>'),
-				play: $('<li class="'+prefix+'-play '+prefix+'-icon '+prefix+'-icon-play"><a href="#" title="Play (space)"></a></li>'),
-				pause: $('<li class="'+prefix+'-pause '+prefix+'-icon '+prefix+'-icon-pause"><a href="#" title="Pause (space)"></a></li>'),
-				stop: $('<li class="'+prefix+'-stop '+prefix+'-icon '+prefix+'-icon-stop"><a href="#" title="Stop (esc)"></a></li>'),
-				next: $('<li class="'+prefix+'-next '+prefix+'-icon '+prefix+'-icon-next"><a href="#" title="Next frame (right arrow)"></a></li>'),
+				container: $('<ul id="'+prefix+'-controls"/>')[0],
+				previous: $('<li class="'+prefix+'-previous '+prefix+'-icon '+prefix+'-icon-previous"><a href="#" title="Previous frame (left arrow)"></a></li>')[0],
+				play: $('<li class="'+prefix+'-play '+prefix+'-icon '+prefix+'-icon-play"><a href="#" title="Play (space)"></a></li>')[0],
+				pause: $('<li class="'+prefix+'-pause '+prefix+'-icon '+prefix+'-icon-pause"><a href="#" title="Pause (space)"></a></li>')[0],
+				stop: $('<li class="'+prefix+'-stop '+prefix+'-icon '+prefix+'-icon-stop"><a href="#" title="Stop (esc)"></a></li>')[0],
+				next: $('<li class="'+prefix+'-next '+prefix+'-icon '+prefix+'-icon-next"><a href="#" title="Next frame (right arrow)"></a></li>')[0],
 				scrub: {
-					container: $('<li class="'+prefix+'-scrub"><a href="#"></a></li>'),
-					fill: $('<span class="'+prefix+'-scrub-fill"></span>')
+					container: $('<li class="'+prefix+'-scrub"><a href="#"></a></li>')[0],
+					fill: $('<span class="'+prefix+'-scrub-fill"></span>')[0]
 				},
 				extended: {
-					size: $('<li class="'+prefix+'-slider"><label class="'+prefix+'-size-toggle">Size</label><input type="range" min="0.1" max="1" step="0.01" value="1.0" class="'+prefix+'-size"/><span class="value"></span></li>'),
-					speed: $('<li class="'+prefix+'-slider"><label class="'+prefix+'-speed-toggle">Speed</label></label><input type="range" min="0.1" max="8" step="0.1" value="1.0" class="'+prefix+'-speed"/><span class="value"></span></li>'),
-					loop: $('<li class="'+prefix+'-loop"><a href="#" title="Toggle loop mode (L)">Loop</a></li>'),
-					pingpong: $('<li class="'+prefix+'-pingpong"><a href="#">Ping-pong</a></li>'),
-					noloop: $('<li class="'+prefix+'-noloop"><a href="#">No loop</a></li>'),
-					reverse: $('<li class="'+prefix+'-reverse disabled"><a href="#" title="Play reverse (R)">Reverse</a></li>'),
+					size: $('<li class="'+prefix+'-slider"><label class="'+prefix+'-size-toggle">Size</label><input type="range" min="0.1" max="1" step="0.01" value="1.0" class="'+prefix+'-size"/><output for="" class="value"></output></li>')[0],
+					speed: $('<li class="'+prefix+'-slider"><label class="'+prefix+'-speed-toggle">Speed</label></label><input type="range" min="0.1" max="8" step="0.1" value="1.0" class="'+prefix+'-speed"/><output for="" class="value"></output></li>')[0],
+					loop: $('<li class="'+prefix+'-loop"><a href="#" title="Toggle loop mode (L)">Loop</a></li>')[0],
+					pingpong: $('<li class="'+prefix+'-pingpong"><a href="#">Ping-pong</a></li>')[0],
+					noloop: $('<li class="'+prefix+'-noloop"><a href="#">No loop</a></li>')[0],
+					reverse: $('<li class="'+prefix+'-reverse disabled"><a href="#" title="Play reverse (R)">Reverse</a></li>')[0]
 				}
 			};
 
-			$(this.player.elements.container).append(this.elements.container);
-			$(this.elements.container)
-				.append(this.elements.previous)
-				.append(this.elements.play)
-				.append(this.elements.pause)
-				.append(this.elements.stop)
-				.append(this.elements.next)
-				.append(this.elements.scrub.container)
-				.append(this.elements.extended.loop)
-				.append(this.elements.extended.pingpong)
-				.append(this.elements.extended.noloop)
-				.append(this.elements.extended.reverse)
-				.append(this.elements.extended.speed)
-				.append(this.elements.extended.size);
+			this.player.elements.container.appendChild(this.elements.container);
+			this.elements.container.appendChild(this.elements.previous)
+			this.elements.container.appendChild(this.elements.play)
+			this.elements.container.appendChild(this.elements.pause)
+			this.elements.container.appendChild(this.elements.stop)
+			this.elements.container.appendChild(this.elements.next)
+			this.elements.container.appendChild(this.elements.scrub.container)
+			this.elements.container.appendChild(this.elements.extended.loop)
+			this.elements.container.appendChild(this.elements.extended.pingpong)
+			this.elements.container.appendChild(this.elements.extended.noloop)
+			this.elements.container.appendChild(this.elements.extended.reverse)
+			this.elements.container.appendChild(this.elements.extended.speed)
+			this.elements.container.appendChild(this.elements.extended.size);
+
 			$(this.elements.scrub.container).find('a')
 				.append(this.elements.scrub.fill);
 
 			/* Control elements event handlers. */
 
-			$(this.player.elements.canvas).click(function(){
+			this.player.elements.canvas.onclick = function(){
 				self.player.togglePlay();
 				return false;
-			});
-			$(this.elements.previous).click(function(){
+			};
+			this.elements.previous.onclick = function(){
 				self.previous();
 				return false;
-			});
-			$(this.elements.next).click(function(){
+			};
+			this.elements.next.onclick = function(){
 				self.next();
 				return false;
-			});
-			$(this.elements.play).click(function(){
+			};
+			this.elements.play.onclick = function(){
 				self.play();
 				return false;
-			});
-			$(this.elements.pause).click(function(){
+			};
+			this.elements.pause.onclick = function(){
 				self.pause();
 				return false;
-			});
-			$(this.elements.stop).click(function(){
+			};
+			this.elements.stop.onclick = function(){
 				self.stop();
 				return false;
-			});
+			};
 			$(this.elements.extended.loop)
 				.add(this.elements.extended.noloop)
 				.add(this.elements.extended.pingpong)

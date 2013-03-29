@@ -4,13 +4,17 @@
 
 /* Loader */
 
+#gifplayer > #gifplayer-status,
 #gifplayer > #gifplayer-loader {
 	display: none;
 }
+#gifplayer.loading > #gifplayer-status,
 #gifplayer.loading > #gifplayer-loader {
 	display: block;
 }
-#gifplayer.loading > canvas,
+#gifplayer.loading > canvas {
+	opacity: 0.25;
+}
 #gifplayer.loading > #gifplayer-next,
 #gifplayer.loading > #gifplayer-previous,
 #gifplayer.loading > #gifplayer-controls {

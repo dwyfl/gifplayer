@@ -41,7 +41,6 @@
 	GIFPlayer.prototype = Object.create(EventEmitter.prototype);
 
 	GIFPlayer.prototype.error = function(error){
-		this.elements.status.style.display = 'block';
 		this.elements.status.innerText = error;
 		this.loading = false;
 	};
@@ -129,7 +128,6 @@
 		this.elements.loader.style['backgroundPositionX'] = 0;
 		this.elements.loader.style['backgroundImage'] = 'none';
 		this.elements.status.innerText = 'Fetching "'+this.urls[this.urlIndex]+'"...';
-		this.elements.status.style.display = 'block';
 	};
 
 	GIFPlayer.prototype.loadStart = function(){
@@ -549,20 +547,19 @@
 		this.elements.status = GIFUtils.elementCreate('DIV',
 			{ id: 'gifplayer-status' },
 			{
-				position:	'relative',
-				top:		'35%',
-				left:		'auto',
-				bottom:		'auto',
+				position:	'absolute',
+				top:		'auto',
+				left:		'50%',
+				bottom:		'60%',
 				right:		'auto',
-				display:	'none',
 				textAlign:	'center',
 				fontFamily:	'"Helvetica Neue", Helvetica, sans-serif',
 				fontWeight:	'normal',
 				fontSize:	'16px',
 				lineHeight:	'1.25em',
-				margin:		'0px 20%',
+				width:		'50%',
+				margin:		'0px -25%',
 				color: 		'#ccc',
-				padding:	'10px 20px',
 				wordBreak:	'break-all'
 			}
 		);

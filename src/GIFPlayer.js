@@ -175,6 +175,7 @@
 
 		if (this.gif.images.length < 2 && this.urls.length > 1) {
 			// Not a GIF animation, skip.
+			// TODO: Test/fix/tweak this.
 			this.elements.status.innerText = 'Not a GIF animation, skipping...';
 			setTimeout((function(self){
 				console.log('wut');
@@ -183,6 +184,8 @@
 			})(this), 500);
 			return;
 		}
+
+		this.elements.container.focus();
 
 		this.elements.canvas.width = this.gif.header.width;
 		this.elements.canvas.height = this.gif.header.height;
@@ -560,7 +563,6 @@
 				margin:		'0px 20%',
 				color: 		'#ccc',
 				padding:	'10px 20px',
-				// wordWrap:	'break-word',
 				wordBreak:	'break-all'
 			}
 		);
@@ -569,15 +571,16 @@
 			{
 				position:	'absolute',
 				top:		'20px',
-				left:		'20px',
+				right:		'30px',
 				bottom:		'auto',
-				right:		'auto',
+				left:		'auto',
 				textAlign:	'left',
 				fontFamily:	'"Helvetica Neue", Helvetica, sans-serif',
 				fontWeight:	'normal',
 				fontSize:	'32px',
-				color: 		'#ccc',
+				color: 		'#fff',
 				opacity:	0,
+				textShadow: 'black 2px 2px 0px',
 				webkitTransition: 'opacity 0.2s ease-out',
 				webkitUserSelect: 'none'
 			}

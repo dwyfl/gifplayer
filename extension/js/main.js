@@ -75,6 +75,7 @@
 				if (player === null) {
 					player = new GIFPlayer(el.src);
 					player.once(GIFPlayer.GIF_EVENT_CLOSE, function(){
+						player.removeAllListeners();
 						player = null;
 						running = false;
 						for (var i = 0; i < loadedImages.length; ++i) {

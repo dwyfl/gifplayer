@@ -54,6 +54,12 @@
 		onSetSpeed(this.player.getSpeed());
 		onSetSize(this.player.getSize());
 
+		this.player.on(GIFPlayer.GIF_EVENT_CLOSE, function(){
+			document.onkeydown = null;
+			self.player = null;
+			self.elements = null;
+		});
+
 		/* Short keys. */
 
 		document.onkeydown = function(e) {
@@ -64,7 +70,7 @@
 				case 32: // space
 					self.player.togglePlay();
 					self.player.setAction(self.player.playing ? 'Play' : 'Pause');
-					return false;
+					break;
 					break;
 				case 37: // <-
 					if (e.shiftKey) {
@@ -122,7 +128,10 @@
 					self.increaseSpeed(e.shiftKey ? -1 : 1);
 					self.player.setAction('Speed: x'+GIFUtils.formattedNumber(self.player.playSpeed, 1));
 					break;
+				default:
+					return true;
 			}
+			return false;
 		};
 	};
 

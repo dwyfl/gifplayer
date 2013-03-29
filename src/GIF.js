@@ -24,7 +24,7 @@
 	};
 
 	GIF.logging = true;
-	GIF.loadUpdateFrequency = 100;
+	GIF.loadUpdateFrequency = 200;
 
 	GIF.bitArrayToNum = function(bitArray) {
 		return bitArray.reduce(function(p, n) { return p * 2 + n; }, 0);

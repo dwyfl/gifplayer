@@ -24,6 +24,7 @@
 	};
 
 	GIF.logging = true;
+	GIF.loadUpdateFrequency = 200;
 
 	GIF.bitArrayToNum = function(bitArray) {
 		return bitArray.reduce(function(p, n) { return p * 2 + n; }, 0);
@@ -64,7 +65,7 @@
 
 		parseAsync : function(arrayBuffer, complete, progress, error){
 
-			GIF.log('GIF: Parsing GIF file ('+ Math.round(arrayBuffer.byteLength/1024,1) +' kb)...');
+			GIF.log('GIF: Parsing GIF...');
 			var startTimeInMs = GIFUtils.timer();
 
 			this.parsing = true;
@@ -118,7 +119,7 @@
 							default:
 								throw new Error('GIF: Invalid GIF file. Unknown block type.');
 						}
-						if (GIFUtils.timer() - updateTime > 500) {
+						if (GIFUtils.timer() - updateTime > GIF.loadUpdateFrequency) {
 							updateTime = GIFUtils.timer();
 							self.update();
 							setTimeout(loop, 0);

@@ -6,13 +6,13 @@
            window.mozRequestAnimationFrame    ||
            function(callback){ window.setTimeout(callback, 1000 / 60); };
   })();
-  
+  ''
   var GIFUtils = {};
 
   GIFUtils.isArray = function(arr) {
     return arr instanceof Array
         || Array.isArray(arr)
-        || (arr && arr !== Object.prototype && isArray(arr.__proto__));
+        || (arr && arr !== Object.prototype && GIFUtils.isArray(arr.__proto__));
   }
   GIFUtils.elementAddClass = function(element, className) {
     var classString = element.className || '';
@@ -114,7 +114,7 @@ IN THE SOFTWARE.
     // If there is no 'error' event listener then throw.
     if (type === 'error') {
       if (!this._events || !this._events.error ||
-          (isArray(this._events.error) && !this._events.error.length))
+          (GIFUtils.isArray(this._events.error) && !this._events.error.length))
       {
         if (arguments[1] instanceof Error) {
           throw arguments[1]; // Unhandled 'error' event
@@ -150,7 +150,7 @@ IN THE SOFTWARE.
       }
       return true;
 
-    } else if (isArray(handler)) {
+    } else if (GIFUtils.isArray(handler)) {
       var l = arguments.length;
       var args = new Array(l - 1);
       for (var i = 1; i < l; i++) args[i - 1] = arguments[i];
@@ -182,7 +182,7 @@ IN THE SOFTWARE.
     if (!this._events[type]) {
       // Optimize the case of one listener. Don't need the extra array object.
       this._events[type] = listener;
-    } else if (isArray(this._events[type])) {
+    } else if (GIFUtils.isArray(this._events[type])) {
 
       // If we've already got an array, just append.
       this._events[type].push(listener);
@@ -242,7 +242,7 @@ IN THE SOFTWARE.
 
     var list = this._events[type];
 
-    if (isArray(list)) {
+    if (GIFUtils.isArray(list)) {
       var position = -1;
       for (var i = 0, length = list.length; i < length; i++) {
         if (list[i] === listener ||
@@ -280,7 +280,7 @@ IN THE SOFTWARE.
   EventEmitter.prototype.listeners = function(type) {
     if (!this._events) this._events = {};
     if (!this._events[type]) this._events[type] = [];
-    if (!isArray(this._events[type])) {
+    if (!GIFUtils.isArray(this._events[type])) {
       this._events[type] = [this._events[type]];
     }
     return this._events[type];

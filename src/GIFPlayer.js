@@ -62,30 +62,50 @@
 		this.loadInit();
 		try {
 			var self = this;
+			var requestStart = 0;
 			var request = new XMLHttpRequest();
 			if (request) {
+				var progress = 0;
+				var size = 10;
+				request.onprogress = function(event){
+					if (event.lengthComputable) {
+						var percent = Math.min(100, Math.max(0, Math.round(100 * event.loaded / event.total)));
+						self.elements.loader.style['backgroundImage'] = 
+							'-webkit-linear-gradient(0deg, #666 '+percent+'%, transparent '+percent+'%)';
+					} else {
+						progress = (progress+1)%size;
+						self.elements.loader.style['backgroundPositionX'] = progress;
+						self.elements.loader.style['backgroundImage'] = 
+							'url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAARUlEQVQYV2OcOXPm//T0dEYGNAASRxZihAkQUgxXCNKNTzGKQnyKMRTiUgz2BLrDsSmG+5aQYpRgwaeYYPjBnIGhEJebAfePMf05Jj0DAAAAAElFTkSuQmCC)';
+					}
+				};
 				request.onreadystatechange = function(){
 					if (request.readyState == 4) {
 						// if (request.status == 200 && request.response) {
-							var gif = new GIF(request.response,
-								function(gif){
-									self.loadComplete(gif);
-								},
-								function(progressAmount, totalBytes, readBytes){
-									self.loadUpdate(progressAmount);
-								},
-								function(error){
-									self.error(error ? error : 'Unknown error.')
-								}
-							);
-						// } else {
-						// 	console.log(request);
-						// 	throw new Error('GIFPlayer: Error in XMLHttpRequest response.');
-						// }
+						var requestEnd = GIFUtils.timer();
+						var requestTime = Math.round((requestEnd - requestStart)*100)*0.01;
+						var requestSize = Math.round(request.response.byteLength*100 / 1024)*0.01;
+						var requestSpeed = Math.round(10 * (request.response.byteLength / 1024) * 1000 / (requestEnd - requestStart)) * 0.1;
+						GIF.log('GIF: Fetched', requestSize, 'kb of data in', requestTime, 'ms ('+requestSpeed+' kb/s).');
+						var gif = new GIF(request.response,
+							function(gif){
+								self.loadComplete(gif);
+							},
+							function(progressAmount, totalBytes, readBytes){
+								self.loadUpdate(progressAmount);
+							},
+							function(error){
+								self.error(error ? error : 'Unknown error.')
+							}
+						);
 					}
 				};
+				GIF.log('GIF: Fetching GIF...');
+				requestStart = GIFUtils.timer();
 				request.open("GET", url, true);
 				request.responseType = 'arraybuffer';
+				// TODO: Work out cache control, force load from cache?
+				// request.setRequestHeader('Cache-Control', 'public');
 				try {
 					request.send(null);
 				} catch (e) {
@@ -105,9 +125,15 @@
 		this.emit(GIFPlayer.LOAD_START);
 		this.loading = true;
 		this.elements.container.className = 'loading';
+		this.elements.loader.style['backgroundPositionX'] = 0;
 		this.elements.loader.style['backgroundImage'] = 'none';
-		this.elements.status.innerText = 'Loading "'+this.urls[this.urlIndex]+'" ...';
+		this.elements.status.innerText = 'Fetching "'+this.urls[this.urlIndex]+'" ...';
 		this.elements.status.style.display = 'block';
+	};
+
+	GIFPlayer.prototype.loadStart = function(){
+		this.elements.loader.style['backgroundPositionX'] = 0;
+		this.elements.status.innerText = 'Decoding "'+self.urls[self.urlIndex]+'" ...';
 	};
 
 	GIFPlayer.prototype.loadNext = function(){
@@ -136,6 +162,7 @@
 	GIFPlayer.prototype.loadUpdate = function(progress){
 		var self = this;
 		var percent = Math.min(100, Math.max(0, Math.round(100 * progress)));
+		this.elements.loader.style['backgroundPositionX'] = 0;
 		self.elements.loader.style['backgroundImage'] = 
 			'-webkit-linear-gradient(0deg, #999 '+percent+'%, transparent '+percent+'%)';
 		this.emit(GIFPlayer.LOAD_PROGRESS, progress);

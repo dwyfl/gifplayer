@@ -24,7 +24,7 @@
 	};
 
 	GIF.logging = true;
-	GIF.loadUpdateFrequency = 200;
+	GIF.loadUpdateFrequency = 100;
 
 	GIF.bitArrayToNum = function(bitArray) {
 		return bitArray.reduce(function(p, n) { return p * 2 + n; }, 0);
@@ -71,7 +71,7 @@
 			this.parsing = true;
 			this.data = arrayBuffer;
 			this.stream = new DataStream(arrayBuffer, 0, DataStream.LITTLE_ENDIAN);
-			this.header = this.parseHeader();
+			this.header = null;
 			this.images = [];
 			this.extensions = [];
 			this.complete = complete;
@@ -84,6 +84,17 @@
 			var updateTime = GIFUtils.timer();
 
 			this.update();
+
+			// Parse header 
+			try { this.header = this.parseHeader(); } catch (e) {
+				if (typeof (this.error) == 'function') {
+					this.error.apply(this, [e]);
+				} else {
+					throw e;
+				}
+			}
+
+			// Start loop
 
 			var loop = function(){
 				try {
@@ -117,7 +128,7 @@
 								GIF.log('GIF: Unexpected block type at '+self.stream.position+', ignoring...');
 								break;
 							default:
-								throw new Error('GIF: Invalid GIF file. Unknown block type.');
+								throw new Error('GIF: Invalid GIF file. Unknown block type (' + sentinel + ').');
 						}
 						if (GIFUtils.timer() - updateTime > GIF.loadUpdateFrequency) {
 							updateTime = GIFUtils.timer();

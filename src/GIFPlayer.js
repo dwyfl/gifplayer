@@ -43,6 +43,7 @@
 	GIFPlayer.prototype.error = function(error){
 		this.elements.status.style.display = 'block';
 		this.elements.status.innerText = error;
+		this.loading = false;
 	};
 
 	GIFPlayer.prototype.load = function(urls){
@@ -71,7 +72,7 @@
 					if (event.lengthComputable) {
 						var percent = Math.min(100, Math.max(0, Math.round(100 * event.loaded / event.total)));
 						self.elements.loader.style['backgroundImage'] = 
-							'-webkit-linear-gradient(0deg, #666 '+percent+'%, transparent '+percent+'%)';
+							'-webkit-linear-gradient(0deg, #444 '+percent+'%, transparent '+percent+'%)';
 					} else {
 						progress = (progress+1)%size;
 						self.elements.loader.style['backgroundPositionX'] = progress;
@@ -127,13 +128,13 @@
 		this.elements.container.className = 'loading';
 		this.elements.loader.style['backgroundPositionX'] = 0;
 		this.elements.loader.style['backgroundImage'] = 'none';
-		this.elements.status.innerText = 'Fetching "'+this.urls[this.urlIndex]+'" ...';
+		this.elements.status.innerText = 'Fetching "'+this.urls[this.urlIndex]+'"...';
 		this.elements.status.style.display = 'block';
 	};
 
 	GIFPlayer.prototype.loadStart = function(){
 		this.elements.loader.style['backgroundPositionX'] = 0;
-		this.elements.status.innerText = 'Decoding "'+self.urls[self.urlIndex]+'" ...';
+		this.elements.status.innerText = 'Decoding "'+self.urls[self.urlIndex]+'"...';
 	};
 
 	GIFPlayer.prototype.loadNext = function(){
@@ -164,13 +165,24 @@
 		var percent = Math.min(100, Math.max(0, Math.round(100 * progress)));
 		this.elements.loader.style['backgroundPositionX'] = 0;
 		self.elements.loader.style['backgroundImage'] = 
-			'-webkit-linear-gradient(0deg, #999 '+percent+'%, transparent '+percent+'%)';
+			'-webkit-linear-gradient(0deg, #999 '+percent+'%, #444 '+percent+'%)';
 		this.emit(GIFPlayer.LOAD_PROGRESS, progress);
 	};
 
 	GIFPlayer.prototype.loadComplete = function(gif){
 
 		this.gif = gif;
+
+		if (this.gif.images.length < 2 && this.urls.length > 1) {
+			// Not a GIF animation, skip.
+			this.elements.status.innerText = 'Not a GIF animation, skipping...';
+			setTimeout((function(self){
+				console.log('wut');
+				self.loading = false;
+				self.loadNext();
+			})(this), 500);
+			return;
+		}
 
 		this.elements.canvas.width = this.gif.header.width;
 		this.elements.canvas.height = this.gif.header.height;
@@ -460,6 +472,19 @@
 		this.elements.next.style['visibility'] = 'visible';
 	};
 
+	GIFPlayer.prototype.setAction = function(str){
+		this.elements.action.innerText = str;
+		this.elements.action.style.opacity = 1;
+		if (this.actionTimer)
+			clearTimeout(this.actionTimer);
+		this.actionTimer = setTimeout((function(self){
+			return function(){
+				self.actionTimer = null;
+				self.elements.action.style.opacity = 0;
+			};
+		})(this), 1000);
+	};
+
 	GIFPlayer.prototype.setupElements = function(){
 		// Create elements.
 		this.elements = {};
@@ -535,7 +560,26 @@
 				margin:		'0px 20%',
 				color: 		'#ccc',
 				padding:	'10px 20px',
-				wordWrap: 	'break-word'
+				// wordWrap:	'break-word',
+				wordBreak:	'break-all'
+			}
+		);
+		this.elements.action = GIFUtils.elementCreate('DIV',
+			{ id: 'gifplayer-action' },
+			{
+				position:	'absolute',
+				top:		'20px',
+				left:		'20px',
+				bottom:		'auto',
+				right:		'auto',
+				textAlign:	'left',
+				fontFamily:	'"Helvetica Neue", Helvetica, sans-serif',
+				fontWeight:	'normal',
+				fontSize:	'32px',
+				color: 		'#ccc',
+				opacity:	0,
+				webkitTransition: 'opacity 0.2s ease-out',
+				webkitUserSelect: 'none'
 			}
 		);
 		this.elements.container = GIFUtils.elementCreate('DIV',
@@ -558,7 +602,8 @@
 				this.elements.loader,
 				this.elements.previous,
 				this.elements.next,
-				this.elements.status
+				this.elements.status,
+				this.elements.action
 			]
 		);
 		var body = document.getElementsByTagName('BODY')[0];

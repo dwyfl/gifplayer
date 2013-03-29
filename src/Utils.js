@@ -17,35 +17,34 @@
   GIFUtils.elementAddClass = function(element, className) {
     var classString = element.className || '';
     var classArray = classString.split(' ');
-    for (var i = 0; i < classArray; ++i) {
-      if (classArray[i] == className) {
-        return;
-      }
+    var newClassArray = [className];
+    for (var i = 0; i < classArray.length; ++i) {
+      if (newClassArray.indexOf(classArray[i]) == -1)
+        newClassArray.push(classArray[i].trim());
     }
-    classArray.push(className);
-    element.className = classArray.join(' ');
+    element.className = newClassArray.join(' ');
   };
   GIFUtils.elementRemoveClass = function(element, className) {
     var classString = element.className || '';
     var classArray = classString.split(' ');
-    var classIndex = -1;
-    for (var i = 0; i < classArray; ++i) {
-      if (classArray[i] == className)
-        classIndex = i;
+    var newClassArray = [];
+    for (var i = 0; i < classArray.length; ++i) {
+      if (classArray[i] != className)
+        newClassArray.push(classArray[i].trim());
     }
-    if (classIndex > -1) {
-      classArray.splice(classIndex, 1);
-      element.className = classArray.join(' ');
-    }
+    element.className = newClassArray.join(' ');
   };
-  GIFUtils.elementCreate = function(elementType, attributes, styles, children) {
+  GIFUtils.elementCreate = function(elementType, attributes, styles, children, innerText) {
     var element = document.createElement(elementType);
     for (var i in attributes)
       element[i] = attributes[i];
     if (styles !== undefined)
       GIFUtils.elementApplyStyles(element, styles);
-    for (var i = 0; children && i < children.length; ++i)
+    for (var i = 0; children && i < children.length; ++i) {
       element.appendChild(children[i]);
+    }
+    if (innerText !== undefined)
+      element.innerText = innerText;
     return element;
   };
   GIFUtils.elementApplyStyles = function(element, styles) {
@@ -61,6 +60,25 @@
         object[i] = extend[i];
     }
     return object;
+  };
+  GIFUtils.formattedNumber = function(n, decimalDigits){
+    var str = n + '';
+    var pointIndex = str.indexOf('.');
+    if (pointIndex > -1) {
+      var len = pointIndex + decimalDigits + 1;
+      while (str.length < pointIndex + decimalDigits + 1)
+        str += '0';
+      return str.substr(0, pointIndex+decimalDigits + 1);
+    } else {
+      str += '.0';
+      while (str.length < pointIndex + decimalDigits + 1)
+        str += '0';
+      return str;
+    }
+  };
+  GIFUtils.LN2 = Math.log(2);
+  GIFUtils.log2 = function(n){
+    return Math.log(n)/GIFUtils.LN2;
   };
   GIFUtils.timer = (function(){
     return performance === undefined ?

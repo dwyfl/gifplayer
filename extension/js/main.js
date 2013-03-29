@@ -51,9 +51,21 @@
 	};
 	var running = false;
 	var start = function(){
+		
 		if (running)
 			return;
-		var images = document.getElementsByTagName('img');
+
+		var imageNodes = document.getElementsByTagName('img');
+		var images = [];
+		for (var i = imageNodes.length; i--; images.unshift(imageNodes[i])) ;
+
+		var iframes = document.getElementsByTagName('iframe');
+		for (var i = 0; i < iframes.length; ++i) {
+			var iframeDocument = iframes[i].contentWindow ? iframes[i].contentWindow.document : iframes[i].contentDocument;
+			var iframeImages = iframeDocument ? iframeDocument.getElementsByTagName('img') : [];
+			for (var j = 0; j < iframeImages.length; images.push(iframeImages[j++])) ;
+		}
+
 		var loadedImages = [];
 		var player = null;
 		for (var i = 0; i < images.length; ++i) {

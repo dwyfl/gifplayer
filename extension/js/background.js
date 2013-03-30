@@ -1,8 +1,6 @@
 
 function insertGIFPlayer(tabId) {
     // Insert GIFPlayer JavaScript/CSS
-    chrome.tabs.executeScript(tabId, {file:"gifplayer/lib/DataStream.js"}, function(result){});
-    chrome.tabs.executeScript(tabId, {file:"gifplayer/lib/jquery.js"}, function(result){});
     chrome.tabs.executeScript(tabId, {file:"gifplayer/src/Utils.js"}, function(result){});
     chrome.tabs.executeScript(tabId, {file:"gifplayer/src/LZW.js"}, function(result){});
     chrome.tabs.executeScript(tabId, {file:"gifplayer/src/GIF.js"}, function(result){});

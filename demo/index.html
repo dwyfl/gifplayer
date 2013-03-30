@@ -3,9 +3,6 @@
   <head>
     <meta name="viewport" content="initial-scale=1.0, user-scalable=no"/>
     <title>GIFPlayer</title>
-    <!-- Dependencies -->
-    <script src="../lib/DataStream.js"></script>
-    <script src="../lib/jquery.js"></script>
     <!-- GIFPlayer -->
     <script src="../src/Utils.js"></script>
     <script src="../src/LZW.js"></script>
@@ -14,7 +11,19 @@
     <script src="../src/GIFPlayerControls.js"></script>
     <link rel="stylesheet" href="../src/css/GIFPlayer.css">
     <!-- main() -->
-    <script src="main.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <script>
+
+$(document).ready(function(){
+    var urls = [];
+    $('img').each(function(){
+        urls.push(this.src);
+        $(this).remove();
+    });
+    var player = new GIFPlayer(urls);
+});
+
+    </script>
   </head>
   <body>
     <img src="images/tard1.gif" alt=""/>

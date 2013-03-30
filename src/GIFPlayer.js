@@ -41,6 +41,7 @@
 	GIFPlayer.prototype = Object.create(EventEmitter.prototype);
 
 	GIFPlayer.prototype.error = function(error){
+		GIFUtils.elementAddClass(this.elements.container, 'error');
 		this.elements.status.innerText = error;
 		this.loading = false;
 	};
@@ -71,7 +72,7 @@
 					if (event.lengthComputable) {
 						var percent = Math.min(100, Math.max(0, Math.round(100 * event.loaded / event.total)));
 						self.elements.loader.style['backgroundImage'] = 
-							'-webkit-linear-gradient(0deg, #444 '+percent+'%, transparent '+percent+'%)';
+							'-webkit-linear-gradient(0deg, #555 '+percent+'%, transparent '+percent+'%)';
 					} else {
 						progress = (progress+1)%size;
 						self.elements.loader.style['backgroundPositionX'] = progress;
@@ -100,7 +101,7 @@
 						);
 					}
 				};
-				GIF.log('GIF: Fetching GIF...');
+				GIF.log('GIF: Fetching GIF from "'+url+'"...');
 				requestStart = GIFUtils.timer();
 				request.open("GET", url, true);
 				request.responseType = 'arraybuffer';
@@ -123,11 +124,16 @@
 
 	GIFPlayer.prototype.loadInit = function(){
 		this.emit(GIFPlayer.LOAD_START);
+		if (this.autoSkipTimer) {
+			clearTimeout(this.autoSkipTimer);
+			this.autoSkipTimer = null;
+		}
 		this.loading = true;
-		this.elements.container.className = 'loading';
 		this.elements.loader.style['backgroundPositionX'] = 0;
 		this.elements.loader.style['backgroundImage'] = 'none';
 		this.elements.status.innerText = 'Fetching "'+this.urls[this.urlIndex]+'"...';
+		GIFUtils.elementRemoveClass(this.elements.container, 'error');
+		GIFUtils.elementAddClass(this.elements.container, 'loading');
 	};
 
 	GIFPlayer.prototype.loadStart = function(){
@@ -163,7 +169,7 @@
 		var percent = Math.min(100, Math.max(0, Math.round(100 * progress)));
 		this.elements.loader.style['backgroundPositionX'] = 0;
 		self.elements.loader.style['backgroundImage'] = 
-			'-webkit-linear-gradient(0deg, #999 '+percent+'%, #444 '+percent+'%)';
+			'-webkit-linear-gradient(0deg, #999 '+percent+'%, #555 '+percent+'%)';
 		this.emit(GIFPlayer.LOAD_PROGRESS, progress);
 	};
 
@@ -174,12 +180,16 @@
 		if (this.gif.images.length < 2 && this.urls.length > 1) {
 			// Not a GIF animation, skip.
 			// TODO: Test/fix/tweak this.
-			this.elements.status.innerText = 'Not a GIF animation, skipping...';
-			setTimeout((function(self){
-				console.log('wut');
-				self.loading = false;
-				self.loadNext();
-			})(this), 500);
+			this.elements.status.innerText = 'Not a GIF animation, skipping "'+this.urls[this.urlIndex]+'"...';
+			this.loading = false;
+			GIFUtils.elementAddClass(this.elements.container, 'error');
+			GIFUtils.elementRemoveClass(this.elements.container, 'loading');
+			this.autoSkipTimer = setTimeout((function(self){
+				return function(){
+					self.autoSkipTimer = null;
+					self.loadNext();
+				};
+			})(this), 1000);
 			return;
 		}
 
@@ -190,7 +200,7 @@
 		this.canvasContext = this.elements.canvas.getContext('2d');
 		this.canvasImageData = this.canvasContext.getImageData(0, 0, this.gif.header.width, this.gif.header.height);
 		
-		this.elements.container.className = '';
+		GIFUtils.elementRemoveClass(this.elements.container, 'loading');
 		this.resize();
 		
 		this.frame = 0;
@@ -323,13 +333,13 @@
 		if (this.mouseMoveTimer)
 			clearTimeout(this.mouseMoveTimer);
 		if (!this.loading) {
-			this.elements.container.className = 'controls';
+			GIFUtils.elementAddClass(this.elements.container, 'controls');
 		}
 		this.mouseMoveTimer = setTimeout((function(self){
 			return function(){
 				self.mouseMoveTimer = null;
 				if (!self.loading) {
-					self.elements.container.className = '';
+					GIFUtils.elementRemoveClass(self.elements.container, 'controls');
 				}
 			};
 		})(this), 1000);
@@ -400,7 +410,12 @@
 
 	GIFPlayer.prototype.stop = function(){
 		this.playing = false;
-		this.setFrame(0);
+		if (this.frames &&
+			this.frames.length > 0 &&
+			this.canvas &&
+			this.canvasImageData &&
+			this.canvasContext)
+			this.setFrame(0);
 		this.emit(GIFPlayer.GIF_EVENT_STOP);
 	};
 
@@ -468,9 +483,20 @@
 	};
 
 	GIFPlayer.prototype.addUrl = function(url) {
-		this.urls.push(url);
-		this.elements.previous.style['visibility'] = 'visible';
-		this.elements.next.style['visibility'] = 'visible';
+		if (this.urls.indexOf(url) == -1)
+			this.urls.push(url);
+		if (this.urls.length > 1) {
+			this.elements.previous.style['visibility'] = 'visible';
+			this.elements.next.style['visibility'] = 'visible';
+		}
+	};
+
+	GIFPlayer.prototype.removeUrl = function(index) {
+		this.urls.splice(index, 1);
+		if (this.urls.length > 1) {
+			this.elements.previous.style['visibility'] = 'visible';
+			this.elements.next.style['visibility'] = 'visible';
+		}
 	};
 
 	GIFPlayer.prototype.setAction = function(str){

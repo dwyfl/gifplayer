@@ -8,10 +8,12 @@
 #gifplayer > #gifplayer-loader {
 	display: none;
 }
+#gifplayer.error > #gifplayer-status,
 #gifplayer.loading > #gifplayer-status,
 #gifplayer.loading > #gifplayer-loader {
 	display: block;
 }
+#gifplayer.error > canvas,
 #gifplayer.loading > canvas {
 	opacity: 0.25;
 }
@@ -19,6 +21,12 @@
 #gifplayer.loading > #gifplayer-previous,
 #gifplayer.loading > #gifplayer-controls {
 	display: none;
+}
+#gifplayer.error > #gifplayer-next,
+#gifplayer.error > #gifplayer-previous,
+#gifplayer.loading.error > #gifplayer-next,
+#gifplayer.loading.error > #gifplayer-previous {
+	display: block;
 }
 
 /* Next / Previous */

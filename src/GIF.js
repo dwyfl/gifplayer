@@ -1,12 +1,55 @@
 (function(){
 
 	/**
+	 * Stream reader. Partially based on DataStream.js by kig:
+	 * https://github.com/kig/DataStream.js
+	 * 
+	 * @param ArrayBuffer arrayBuffer Stream data.
+	 */
+	var GIFStream = function(arrayBuffer){
+		if (!(arrayBuffer instanceof ArrayBuffer))
+			throw new Error('Unable to create GIFStream from object.');
+		this.buffer = arrayBuffer;
+		this.byteLength = arrayBuffer.byteLength;
+		this.dataview = new Uint8Array(this.buffer);
+		this.position = 0;
+	};
+
+	GIFStream.memcpy = function(dst, dstOffset, src, srcOffset, byteLength) {
+		var dstU8 = new Uint8Array(dst, dstOffset, byteLength);
+		var srcU8 = new Uint8Array(src, srcOffset, byteLength);
+		dstU8.set(srcU8);
+	};
+	GIFStream.prototype.readUint8Array = function(length) {
+		var arr = new Uint8Array(length);
+		GIFStream.memcpy(arr.buffer, 0, this.buffer, this.position, length);
+		this.position += length;
+		return arr;
+	};
+	GIFStream.prototype.readUint16 = function(e) {
+		var r = (this.dataview[this.position+1] << 8) | this.dataview[this.position];
+		this.position += 2;
+		return r;
+	};
+	GIFStream.prototype.readUint8 = function() {
+		var r = this.dataview[this.position];
+		this.position += 1;
+		return r;
+	};
+	GIFStream.prototype.readString = function(length) {
+		var r = String.fromCharCode.apply(null, new Uint8Array(this.buffer, this.position, length));
+		this.position += length;
+		return r;
+	};
+
+	/**
 	 * GIF parser. Partially based on jsgif by shachaf:
 	 * http://slbkbs.org/jsgif/
 	 * 
-	 * @param ArrayBuffer Data     Raw GIF data.
+	 * @param ArrayBuffer data     Raw GIF data.
 	 * @param function    complete Callback executed when decoding completed.
 	 * @param function    progress Callback executed after reading a block.
+	 * @param function    error    Callback executed if an error occurs.
 	 */
 	var GIF = function(data, complete, progress, error) {
 
@@ -70,7 +113,7 @@
 
 			this.parsing = true;
 			this.data = arrayBuffer;
-			this.stream = new DataStream(arrayBuffer, 0, DataStream.LITTLE_ENDIAN);
+			this.stream = new GIFStream(arrayBuffer);
 			this.header = null;
 			this.images = [];
 			this.extensions = [];
@@ -257,7 +300,7 @@
 		    }
 		    var parsePlainTextExtension = function(block) {
 				var blockSize = self.stream.readUint8(); // Always 0x0c.
-				block.header = self.stream.readBytes(12);
+				block.header = self.stream.readString(12);
 				block.data = self.parseSubBlocks();
 		    }
 		    var parseUnknownExtension = function(block) {

@@ -299,11 +299,7 @@
 			/* Event handlers. */
 
 			var self = this;
-
-			this.player.elements.canvas.onclick = function(){
-				self.player.togglePlay();
-				return false;
-			};
+			
 			this.elements.previous.onclick = function(){
 				self.previous();
 				return false;

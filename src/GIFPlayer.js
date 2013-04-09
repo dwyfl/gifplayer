@@ -47,6 +47,13 @@
 		this.loading = false;
 	};
 
+	GIFPlayer.prototype.killRequest = function(){
+		this.request.onprogress = null;
+		this.request.onreadystatechange = null;
+		this.request.abort();
+		this.request = null;
+	};
+
 	GIFPlayer.prototype.load = function(urls){
 		this.urls = GIFUtils.isArray(urls) ? urls : [ urls ];
 		this.urlIndex = 0;
@@ -102,7 +109,7 @@
 								self.error(error ? error : 'Unknown error.')
 							}
 						);
-						self.request = null;
+						self.killRequest();
 					}
 				};
 				GIF.log('GIF: Fetching GIF from "'+url+'"...');
@@ -121,7 +128,6 @@
 			}
 		} catch (e) {
 			var error = e || 'Unknown error.';
-			this.loadAbort();
 			this.setStatus(error);
 			throw e;
 		}
@@ -149,7 +155,7 @@
 	GIFPlayer.prototype.loadNext = function(){
 		if (this.urls.length > 1) {
 			if (this.loading && this.request)
-				this.request.abort();
+				this.killRequest();
 			else
 				this.stop();
 			this.urlIndex = this.urlIndex >= this.urls.length - 1 ? 0 : this.urlIndex + 1;
@@ -160,18 +166,11 @@
 	GIFPlayer.prototype.loadPrevious = function(){
 		if (this.urls.length > 1) {
 			if (this.loading && this.request)
-				this.request.abort();
+				this.killRequest();
 			else
 				this.stop();
 			this.urlIndex = this.urlIndex <= 0 ? this.urls.length - 1 : this.urlIndex - 1;
 			this.loadUrl(this.urls[this.urlIndex]);
-		}
-	};
-
-	GIFPlayer.prototype.loadAbort = function(){
-		var body = document.getElementsByTagName('BODY')[0];
-		if (body && this.elements.container) {
-			body.removeChild(this.elements.container);
 		}
 	};
 
@@ -352,7 +351,7 @@
 	};
 
 	GIFPlayer.prototype.play = function(){
-		if (this.frames.length > 1) {
+		if (this.frames && this.frames.length > 1) {
 			this.playing = true;
 			this.playLastFrame = GIFUtils.timer();
 			window.requestAnimFrame(GIFPlayer.prototype.step.bind(this));
@@ -557,6 +556,11 @@
 		};
 		window.onmousemove = function(event) {
 			self.mouseMove();
+		};
+		this.elements.canvas.onclick = function(){
+			if (!self.loading)
+				self.player.togglePlay();
+			return false;
 		};
 		this.elements.next.onclick = function(){
 			self.loadNext();

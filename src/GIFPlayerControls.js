@@ -62,7 +62,16 @@
 
 		/* Short keys. */
 
+		document.onkeyup = function(e) {
+			switch (e.which) {
+				case 91: // Command
+					self.commandKey = false;
+					break;
+			}
+		}
 		document.onkeydown = function(e) {
+			if (e.ctrlKey || self.commandKey)
+				return true;
 			switch (e.which) {
 				case 27: // esc
 					self.player.close();
@@ -73,7 +82,7 @@
 					break;
 					break;
 				case 37: // <-
-					if (e.shiftKey) {
+					if (e.shiftKey && self.player.urls.length) {
 						self.player.loadPrevious();
 						self.player.setAction('Previous');
 						break;
@@ -87,7 +96,7 @@
 					}
 					break;
 				case 39: // ->
-					if (e.shiftKey) {
+					if (e.shiftKey && self.player.urls.length) {
 						self.player.loadNext();
 						self.player.setAction('Next');
 						break;
@@ -127,6 +136,9 @@
 				case 83: // S
 					self.increaseSpeed(e.shiftKey ? -1 : 1);
 					self.player.setAction('Speed: x'+GIFUtils.formattedNumber(self.player.playSpeed, 1));
+					break;
+				case 91: // Command
+					self.commandKey = true;
 					break;
 				default:
 					return true;

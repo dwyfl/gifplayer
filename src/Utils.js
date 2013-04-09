@@ -76,6 +76,15 @@
       return str;
     }
   };
+  GIFUtils.humanReadableBytes = function(bytes){
+    var i = -1;
+    var byteUnits = [' kB', ' MB', ' GB', ' TB', 'PB', 'EB', 'ZB', 'YB'];
+    do {
+        bytes = bytes / 1024;
+        i++;
+    } while (bytes > 1024);
+    return Math.max(bytes, 0.1).toFixed(1) + byteUnits[i];
+  };
   GIFUtils.LN2 = Math.log(2);
   GIFUtils.log2 = function(n){
     return Math.log(n)/GIFUtils.LN2;

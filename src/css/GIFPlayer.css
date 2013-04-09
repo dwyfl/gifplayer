@@ -1,9 +1,52 @@
+#gifplayer {
+	z-index: 2147483647;
+	position: fixed;
+	width: 100%;
+	height: 100%;
+	display: block;
+	top: 0;
+	left: 0;
+	bottom: auto;
+	right: auto;
+	border: none;
+	background: black;
+	text-align: center;
+}
 #gifplayer * {
 	text-transform: none;
+	font-family: "Helvetica Neue", Helvetica, sans-serif;
 }
 
-/* Loader */
+/* Loader / Status */
 
+#gifplayer-loader {
+	position: fixed;
+	top: 50%;
+	left: 50%;
+	bottom: auto;
+	right: auto;
+	border: 2px solid #999;
+	border-radius: 7px;
+	width: 50%;
+	height: 10px;
+	background: transparent;
+	margin: -5px -25%;
+}
+#gifplayer-status {
+	position: absolute;
+	top: auto;
+	left: 50%;
+	bottom: 60%;
+	right: auto;
+	text-align: center;
+	font-weight: normal;
+	font-size: 16px;
+	line-height: 1.25em;
+	width: 50%;
+	margin: 0px -25%;
+	color: #ccc;
+	word-break: break-all;
+}
 #gifplayer > #gifplayer-status,
 #gifplayer > #gifplayer-loader {
 	display: none;
@@ -17,8 +60,6 @@
 #gifplayer.loading > canvas {
 	opacity: 0.25;
 }
-#gifplayer.loading > #gifplayer-next,
-#gifplayer.loading > #gifplayer-previous,
 #gifplayer.loading > #gifplayer-controls {
 	display: none;
 }
@@ -27,6 +68,24 @@
 #gifplayer.loading.error > #gifplayer-next,
 #gifplayer.loading.error > #gifplayer-previous {
 	display: block;
+}
+
+/* Action */
+
+#gifplayer-action {
+	position: absolute;
+	top: 20px;
+	right: 30px;
+	bottom: auto;
+	left: auto;
+	text-align: left;
+	text-shadow: black 2px 2px 0px;
+	font-weight: normal;
+	font-size: 32px;
+	color: #fff;
+	opacity: 0;
+	-webkit-transition: opacity 0.2s ease-out;
+	-webkit-user-select: none;
 }
 
 /* Next / Previous */
@@ -40,14 +99,30 @@
 #gifplayer-previous:hover {
 	opacity: 0.5;
 }
+#gifplayer-previous,
+#gifplayer-next {
+	position: fixed;
+	top: 50%;
+	left: auto;
+	bottom: auto;
+	right: auto;
+	width: 0;
+	height: 0;
+	border-style: solid;
+	margin: -40px 0;
+}
 #gifplayer-previous {
 	border-color: transparent #ccc transparent transparent;
+	border-width: 40px 20px 40px 0;
+	left: 20px;
 }
 #gifplayer-previous:hover {
 	border-color: transparent #fff transparent transparent;
 }
 #gifplayer-next {
 	border-color: transparent transparent transparent #ccc;
+	border-width: 40px 0 40px 20px;
+	right: 20px;
 }
 #gifplayer-next:hover {
 	border-color: transparent transparent transparent #fff;
@@ -80,7 +155,6 @@
 	overflow: hidden;
     padding: 0;
 	line-height: 0;
-	font-family: sans-serif;
 	font-size: 12px;
 	text-align: center;
     list-style: none;

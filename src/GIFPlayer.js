@@ -11,6 +11,7 @@
 		this.canvasSize = options.size;
 		this.playSpeed = options.speed;
 		this.loading = false;
+		this.request = null;
 		this.setupElements();
 		this.controls = new GIFPlayerControls(this);
 		if (typeof (urls) != 'undefined')
@@ -42,7 +43,7 @@
 
 	GIFPlayer.prototype.error = function(error){
 		GIFUtils.elementAddClass(this.elements.container, 'error');
-		this.elements.status.innerText = error;
+		this.setStatus(error);
 		this.loading = false;
 	};
 
@@ -64,15 +65,17 @@
 		try {
 			var self = this;
 			var requestStart = 0;
-			var request = new XMLHttpRequest();
-			if (request) {
+			this.request = new XMLHttpRequest();
+			if (this.request) {
 				var progress = 0;
 				var size = 10;
-				request.onprogress = function(event){
+				this.request.onprogress = function(event){
 					if (event.lengthComputable) {
 						var percent = Math.min(100, Math.max(0, Math.round(100 * event.loaded / event.total)));
+						self.elements.loader.style['backgroundPositionX'] = 0;
 						self.elements.loader.style['backgroundImage'] = 
 							'-webkit-linear-gradient(0deg, #555 '+percent+'%, transparent '+percent+'%)';
+						self.setStatus('Fetching... ('+GIFUtils.humanReadableBytes(event.loaded)+')<br/>'+self.urls[self.urlIndex]);
 					} else {
 						progress = (progress+1)%size;
 						self.elements.loader.style['backgroundPositionX'] = progress;
@@ -80,15 +83,15 @@
 							'url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAARUlEQVQYV2OcOXPm//T0dEYGNAASRxZihAkQUgxXCNKNTzGKQnyKMRTiUgz2BLrDsSmG+5aQYpRgwaeYYPjBnIGhEJebAfePMf05Jj0DAAAAAElFTkSuQmCC)';
 					}
 				};
-				request.onreadystatechange = function(){
-					if (request.readyState == 4) {
-						// if (request.status == 200 && request.response) {
+				this.request.onreadystatechange = function(){
+					if (self.request && self.request.readyState == 4 && self.request.response) {
+						// if (self.request.status == 200 && self.request.response) {
+						self.loadDecodeStart();
 						var requestEnd = GIFUtils.timer();
 						var requestTime = Math.round((requestEnd - requestStart)*100)*0.01;
-						var requestSize = Math.round(request.response.byteLength*100 / 1024)*0.01;
-						var requestSpeed = Math.round(10 * (request.response.byteLength / 1024) * 1000 / (requestEnd - requestStart)) * 0.1;
-						GIF.log('GIF: Fetched', requestSize, 'kb of data in', requestTime, 'ms ('+requestSpeed+' kb/s).');
-						var gif = new GIF(request.response,
+						var requestSpeed = Math.round(10 * (self.request.response.byteLength / 1024) * 1000 / (requestEnd - requestStart)) * 0.1;
+						GIF.log('GIF: Fetched', GIFUtils.humanReadableBytes(self.request.response.byteLength), 'of data in', requestTime, 'ms ('+requestSpeed+' kb/s).');
+						var gif = new GIF(self.request.response,
 							function(gif){
 								self.loadComplete(gif);
 							},
@@ -99,16 +102,17 @@
 								self.error(error ? error : 'Unknown error.')
 							}
 						);
+						self.request = null;
 					}
 				};
 				GIF.log('GIF: Fetching GIF from "'+url+'"...');
 				requestStart = GIFUtils.timer();
-				request.open("GET", url, true);
-				request.responseType = 'arraybuffer';
+				this.request.open("GET", url, true);
+				this.request.responseType = 'arraybuffer';
 				// TODO: Work out cache control, force load from cache?
-				// request.setRequestHeader('Cache-Control', 'public');
+				// this.request.setRequestHeader('Cache-Control', 'public');
 				try {
-					request.send(null);
+					this.request.send(null);
 				} catch (e) {
 					throw new Error('GIFPlayer: Error while making XMLHttpRequest.');
 				}
@@ -116,8 +120,9 @@
 				throw new Error('GIFPlayer: Could not create XMLHttpRequest.');
 			}
 		} catch (e) {
+			var error = e || 'Unknown error.';
 			this.loadAbort();
-			this.elements.status.innerText = e || 'Unknown error.';
+			this.setStatus(error);
 			throw e;
 		}
 	};
@@ -131,27 +136,33 @@
 		this.loading = true;
 		this.elements.loader.style['backgroundPositionX'] = 0;
 		this.elements.loader.style['backgroundImage'] = 'none';
-		this.elements.status.innerText = 'Fetching "'+this.urls[this.urlIndex]+'"...';
+		this.setStatus('Fetching...<br/>'+this.urls[this.urlIndex]);
 		GIFUtils.elementRemoveClass(this.elements.container, 'error');
 		GIFUtils.elementAddClass(this.elements.container, 'loading');
 	};
 
-	GIFPlayer.prototype.loadStart = function(){
+	GIFPlayer.prototype.loadDecodeStart = function(){
 		this.elements.loader.style['backgroundPositionX'] = 0;
-		this.elements.status.innerText = 'Decoding "'+self.urls[self.urlIndex]+'"...';
+		this.setStatus('Decoding...<br/>'+this.urls[this.urlIndex]);
 	};
 
 	GIFPlayer.prototype.loadNext = function(){
-		if (this.urls.length > 1 && !this.loading) {
-			this.stop();
+		if (this.urls.length > 1) {
+			if (this.loading && this.request)
+				this.request.abort();
+			else
+				this.stop();
 			this.urlIndex = this.urlIndex >= this.urls.length - 1 ? 0 : this.urlIndex + 1;
 			this.loadUrl(this.urls[this.urlIndex]);
 		}
 	};
 
 	GIFPlayer.prototype.loadPrevious = function(){
-		if (this.urls.length > 1 && !this.loading) {
-			this.stop();
+		if (this.urls.length > 1) {
+			if (this.loading && this.request)
+				this.request.abort();
+			else
+				this.stop();
 			this.urlIndex = this.urlIndex <= 0 ? this.urls.length - 1 : this.urlIndex - 1;
 			this.loadUrl(this.urls[this.urlIndex]);
 		}
@@ -180,7 +191,7 @@
 		if (this.gif.images.length < 2 && this.urls.length > 1) {
 			// Not a GIF animation, skip.
 			// TODO: Test/fix/tweak this.
-			this.elements.status.innerText = 'Not a GIF animation, skipping "'+this.urls[this.urlIndex]+'"...';
+			this.setStatus('Not a GIF animation, skipping...<br/>'+this.urls[this.urlIndex]);
 			this.loading = false;
 			GIFUtils.elementAddClass(this.elements.container, 'error');
 			GIFUtils.elementRemoveClass(this.elements.container, 'loading');
@@ -192,15 +203,14 @@
 			})(this), 1000);
 			return;
 		}
-
-		this.elements.container.focus();
+		
+		GIFUtils.elementRemoveClass(this.elements.container, 'loading');
 
 		this.elements.canvas.width = this.gif.header.width;
 		this.elements.canvas.height = this.gif.header.height;
 		this.canvasContext = this.elements.canvas.getContext('2d');
 		this.canvasImageData = this.canvasContext.getImageData(0, 0, this.gif.header.width, this.gif.header.height);
-		
-		GIFUtils.elementRemoveClass(this.elements.container, 'loading');
+
 		this.resize();
 		
 		this.frame = 0;
@@ -332,15 +342,11 @@
 	GIFPlayer.prototype.mouseMove = function(e) {
 		if (this.mouseMoveTimer)
 			clearTimeout(this.mouseMoveTimer);
-		if (!this.loading) {
-			GIFUtils.elementAddClass(this.elements.container, 'controls');
-		}
+		GIFUtils.elementAddClass(this.elements.container, 'controls');
 		this.mouseMoveTimer = setTimeout((function(self){
 			return function(){
 				self.mouseMoveTimer = null;
-				if (!self.loading) {
-					GIFUtils.elementRemoveClass(self.elements.container, 'controls');
-				}
+				GIFUtils.elementRemoveClass(self.elements.container, 'controls');
 			};
 		})(this), 1000);
 	};
@@ -499,6 +505,10 @@
 		}
 	};
 
+	GIFPlayer.prototype.setStatus = function(html){
+		this.elements.status.innerHTML = html;
+	};
+
 	GIFPlayer.prototype.setAction = function(str){
 		this.elements.action.innerText = str;
 		this.elements.action.style.opacity = 1;
@@ -516,122 +526,27 @@
 		// Create elements.
 		this.elements = {};
 		this.elements.canvas = GIFUtils.elementCreate('canvas', { id: 'gifplayer-canvas' });
-		this.elements.previous = GIFUtils.elementCreate('A',
-			{
-				id: 'gifplayer-previous',
-				href: '#',
-				title: 'Previous GIF (shift + left arrow)'
-			},
-			{
-				position:		'fixed',
-				top:			'50%',
-				left:			'20px',
-				bottom:			'auto',
-				right:			'auto',
-				width:			'0',
-				height:			'0',
-				borderStyle: 	'solid',
-				borderWidth: 	'40px 20px 40px 0',
-				margin:			'-40px 0'
-			}
-		);
-		this.elements.next = GIFUtils.elementCreate('A',
-			{
-				id: 'gifplayer-next',
-				href: '#',
-				title: 'Next GIF (shift + right arrow)'
-			},
-			{
-				position:		'fixed',
-				top:			'50%',
-				right:			'20px',
-				bottom:			'auto',
-				left:			'auto',
-				width:			'0',
-				height:			'0',
-				borderStyle: 	'solid',
-				borderWidth: 	'40px 0 40px 20px',
-				margin:			'-40px 0'
-			}
-		);
-		this.elements.loader = GIFUtils.elementCreate('DIV',
-			{ id: 'gifplayer-loader' },
-			{
-				position:		'fixed',
-				top:			'50%',
-				left:			'50%',
-				bottom:			'auto',
-				right:			'auto',
-				border:			'2px solid #999',
-				borderRadius:	'7px',
-				width:			'50%',
-				height:			'10px',
-				background:		'transparent',
-				margin:			'-5px -25%'
-			}
-		);
-		this.elements.status = GIFUtils.elementCreate('DIV',
-			{ id: 'gifplayer-status' },
-			{
-				position:	'absolute',
-				top:		'auto',
-				left:		'50%',
-				bottom:		'60%',
-				right:		'auto',
-				textAlign:	'center',
-				fontFamily:	'"Helvetica Neue", Helvetica, sans-serif',
-				fontWeight:	'normal',
-				fontSize:	'16px',
-				lineHeight:	'1.25em',
-				width:		'50%',
-				margin:		'0px -25%',
-				color: 		'#ccc',
-				wordBreak:	'break-all'
-			}
-		);
-		this.elements.action = GIFUtils.elementCreate('DIV',
-			{ id: 'gifplayer-action' },
-			{
-				position:	'absolute',
-				top:		'20px',
-				right:		'30px',
-				bottom:		'auto',
-				left:		'auto',
-				textAlign:	'left',
-				fontFamily:	'"Helvetica Neue", Helvetica, sans-serif',
-				fontWeight:	'normal',
-				fontSize:	'32px',
-				color: 		'#fff',
-				opacity:	0,
-				textShadow: 'black 2px 2px 0px',
-				webkitTransition: 'opacity 0.2s ease-out',
-				webkitUserSelect: 'none'
-			}
-		);
-		this.elements.container = GIFUtils.elementCreate('DIV',
-			{ id: 'gifplayer' },
-			{
-				position:	'fixed',
-				top:		0,
-				left:		0,
-				bottom:		'auto',
-				right:		'auto',
-				zIndex:		2147483647,
-				border:		'none',
-				width:		'100%',
-				height:		'100%',
-				background:	'black',
-				textAlign:	'center'
-			},
-			[
-				this.elements.canvas,
-				this.elements.loader,
-				this.elements.previous,
-				this.elements.next,
-				this.elements.status,
-				this.elements.action
-			]
-		);
+		this.elements.previous = GIFUtils.elementCreate('A', {
+			id: 'gifplayer-previous',
+			href: '#',
+			title: 'Previous GIF (shift + left arrow)'
+		});
+		this.elements.next = GIFUtils.elementCreate('A', {
+			id: 'gifplayer-next',
+			href: '#',
+			title: 'Next GIF (shift + right arrow)'
+		});
+		this.elements.loader = GIFUtils.elementCreate('DIV', { id: 'gifplayer-loader' });
+		this.elements.status = GIFUtils.elementCreate('DIV', { id: 'gifplayer-status' });
+		this.elements.action = GIFUtils.elementCreate('DIV', { id: 'gifplayer-action' });
+		this.elements.container = GIFUtils.elementCreate('DIV', { id: 'gifplayer' }, undefined, [
+			this.elements.canvas,
+			this.elements.loader,
+			this.elements.previous,
+			this.elements.next,
+			this.elements.status,
+			this.elements.action
+		]);
 		var body = document.getElementsByTagName('BODY')[0];
 		if (body)
 			body.appendChild(this.elements.container);

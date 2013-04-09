@@ -104,6 +104,11 @@
 							},
 							function(progressAmount, totalBytes, readBytes){
 								self.loadUpdate(progressAmount);
+								while (self.frames.length < this.images.length) {
+									var frame = self.initFrame(this, self.frames.length);
+									self.frames.push(frame.frameImage);
+									self.frameDelay.push(frame.frameDelay);
+								}
 							},
 							function(error){
 								self.error(error ? error : 'Unknown error.')
@@ -148,6 +153,8 @@
 	};
 
 	GIFPlayer.prototype.loadDecodeStart = function(){
+		this.frames = [];
+		this.frameDelay = [];
 		this.elements.loader.style['backgroundPositionX'] = 0;
 		this.setStatus('Decoding...<br/>'+this.urls[this.urlIndex]);
 	};
@@ -202,8 +209,6 @@
 			})(this), 1000);
 			return;
 		}
-		
-		GIFUtils.elementRemoveClass(this.elements.container, 'loading');
 
 		this.elements.canvas.width = this.gif.header.width;
 		this.elements.canvas.height = this.gif.header.height;
@@ -211,45 +216,43 @@
 		this.canvasImageData = this.canvasContext.getImageData(0, 0, this.gif.header.width, this.gif.header.height);
 
 		this.resize();
-		
-		this.frame = 0;
-		this.frames = [];
-		this.frameDelay = new Int32Array(this.gif.images.length);
+
+		while (this.frames.length < this.gif.images.length) {
+			var frame = this.initFrame(this.gif, this.frames.length);
+			this.frames.push(frame.frameImage);
+			this.frameDelay.push(frame.frameDelay);
+		}
 
 		this.playing = false;
 		this.playLastFrame = 0;
 		this.setReverse(false);
 		this.setLoopMode(GIFPlayer.LOOP_NORMAL);
-
-		for (var i = 0; i < this.gif.images.length; ++i) {
-			var frame = this.initFrame(i);
-			this.frames.push(frame.frameImage);
-			this.frameDelay[i] = frame.frameDelay;
-		}
 		
+		this.frame = 0;
 		this.setFrame(0);
 		this.setSpeed(this.playSpeed);
 		// this.setSize(this.canvasSize);
 		this.setLoopMode(GIFPlayer.LOOP_NORMAL);
 		this.loading = false;
+		
+		GIFUtils.elementRemoveClass(this.elements.container, 'loading');
 
 		this.emit(GIFPlayer.LOAD_COMPLETE);
 		this.play();
 	};
 
-	GIFPlayer.prototype.initFrame = function(frame){
+	GIFPlayer.prototype.initFrame = function(gif, frame){
 
-		var self = this;
 		var getDisposalMethod = function(frame){
-			var gce = self.gif.images[frame].gce;
+			var gce = gif.images[frame].gce;
 			return gce ? gce.disposalMethod : null;
 		};
-		var frameImageData = new ArrayBuffer(this.gif.header.width * this.gif.header.height * 4);
+		var frameImageData = new ArrayBuffer(gif.header.width * gif.header.height * 4);
 		var frameImageView = new Uint32Array(frameImageData);
 
-		var gifImage = this.gif.images[frame];
+		var gifImage = gif.images[frame];
 		var gifImageView = new Uint8Array(gifImage.data);
-		var gifHeader = this.gif.header ? this.gif.header : {};
+		var gifHeader = gif.header ? gif.header : {};
 		var gifGce = gifImage.gce ? gifImage.gce : {};
 		var gifColorTableData = gifImage.localColorTableFlag ?
 			gifImage.localColorTable :
@@ -319,7 +322,7 @@
 		}
 		return {
 			frameImage: frameImageData,
-			frameDelay: this.gif.images.length > 1 ? gifFrameDelay : -1
+			frameDelay: gif.images.length > 1 ? gifFrameDelay : -1
 		};
 	};
 
@@ -484,6 +487,7 @@
 
 	GIFPlayer.prototype.close = function(){
 		this.emit(GIFPlayer.GIF_EVENT_CLOSE);
+		this.elements.container.parentNode.style.overflow = 'auto';
 		this.elements.container.parentNode.removeChild(this.elements.container);
 	};
 
@@ -547,8 +551,10 @@
 			this.elements.action
 		]);
 		var body = document.getElementsByTagName('BODY')[0];
-		if (body)
+		if (body) {
 			body.appendChild(this.elements.container);
+			body.style.overflow = 'hidden';
+		}
 		// Add eventlisteners.
 		var self = this;
 		window.onresize = function(event) {

@@ -66,7 +66,7 @@
 			this.parse(data, complete, progress, error);
 	};
 
-	GIF.logging = true;
+	GIF.logging = false;
 	GIF.loadUpdateFrequency = 200;
 
 	GIF.bitArrayToNum = function(bitArray) {

@@ -61,21 +61,6 @@
     }
     return object;
   };
-  GIFUtils.formattedNumber = function(n, decimalDigits){
-    var str = n + '';
-    var pointIndex = str.indexOf('.');
-    if (pointIndex > -1) {
-      var len = pointIndex + decimalDigits + 1;
-      while (str.length < pointIndex + decimalDigits + 1)
-        str += '0';
-      return str.substr(0, pointIndex+decimalDigits + 1);
-    } else {
-      str += '.0';
-      while (str.length < pointIndex + decimalDigits + 1)
-        str += '0';
-      return str;
-    }
-  };
   GIFUtils.humanReadableBytes = function(bytes){
     var i = -1;
     var byteUnits = [' kB', ' MB', ' GB', ' TB', 'PB', 'EB', 'ZB', 'YB'];

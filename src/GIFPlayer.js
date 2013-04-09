@@ -559,7 +559,7 @@
 		};
 		this.elements.canvas.onclick = function(){
 			if (!self.loading)
-				self.player.togglePlay();
+				self.togglePlay();
 			return false;
 		};
 		this.elements.next.onclick = function(){

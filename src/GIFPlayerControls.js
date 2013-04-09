@@ -42,7 +42,7 @@
 		this.player.on(GIFPlayer.GIF_EVENT_STOP, onStop);
 		var onSetSpeed = function(speed){
 			self.elements.speed.input.value = speed;
-			self.elements.speed.output.innerText = GIFUtils.formattedNumber(speed, 1);
+			self.elements.speed.output.innerText = 'x'+Number(speed).toFixed(1);
 		};
 		var onSetSize = function(size){
 			self.elements.size.input.value = size;
@@ -90,7 +90,7 @@
 					if (self.player.playing) {
 						var speed = Math.round(parseFloat(self.elements.speed.input.value) * 10) * 0.1;
 						self.player.setSpeed(parseFloat(speed) - 0.1);
-						self.player.setAction('Speed: x'+GIFUtils.formattedNumber(self.player.playSpeed, 1));
+						self.player.setAction('Speed: x'+Number(self.player.playSpeed).toFixed(1));
 					} else {
 						self.previous();
 					}
@@ -104,7 +104,7 @@
 					if (self.player.playing) {
 						var speed = Math.round(parseFloat(self.elements.speed.input.value) * 10) * 0.1;
 						self.player.setSpeed(parseFloat(speed) + 0.1);
-						self.player.setAction('Speed: x'+GIFUtils.formattedNumber(self.player.playSpeed, 1));
+						self.player.setAction('Speed: x'+Number(self.player.playSpeed).toFixed(1));
 					} else {
 						self.next();
 					}
@@ -135,7 +135,7 @@
 					break;
 				case 83: // S
 					self.increaseSpeed(e.shiftKey ? -1 : 1);
-					self.player.setAction('Speed: x'+GIFUtils.formattedNumber(self.player.playSpeed, 1));
+					self.player.setAction('Speed: x'+Number(self.player.playSpeed).toFixed(1));
 					break;
 				case 91: // Command
 					self.commandKey = true;

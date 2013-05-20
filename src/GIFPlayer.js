@@ -206,10 +206,13 @@
 					self.autoSkipTimer = null;
 					self.loadNext();
 				};
-			})(this), 1000);
+			})(this), 2000);
 			return;
 		}
 
+		this.elements.info.innerHTML =
+			'<p id="gifplayer-info-url"><a href="'+this.urls[this.urlIndex]+'">'+this.urls[this.urlIndex]+'</a></p>'+
+			'<p id="gifplayer-info-size">'+this.gif.header.width+' x '+this.gif.header.height+', '+GIFUtils.humanReadableBytes(this.gif.data.byteLength)+', '+this.gif.images.length+' frames</p>';
 		this.elements.canvas.width = this.gif.header.width;
 		this.elements.canvas.height = this.gif.header.height;
 		this.canvasContext = this.elements.canvas.getContext('2d');
@@ -333,10 +336,10 @@
 			var windowRatio = windowHeight / windowWidth;
 			var gifRatio = this.gif.header.height / this.gif.header.width;
 			if (windowRatio < gifRatio) {
-				GIFUtils.elementApplyStyles(this.elements.canvas, {height: '100%', width: 'auto', marginTop: 0});
+    			GIFUtils.extendObject(this.elements.canvas.style, {height: '100%', width: 'auto', marginTop: 0}, true);
 			} else {
 				var height = gifRatio * windowWidth;
-				GIFUtils.elementApplyStyles(this.elements.canvas, {height: 'auto', width: '100%', marginTop: Math.round((windowHeight - height) * 0.5)+'px'});
+    			GIFUtils.extendObject(this.elements.canvas.style,  {height: 'auto', width: '100%', marginTop: Math.round((windowHeight - height) * 0.5)+'px'}, true);
 			}
 		}
 	};
@@ -420,7 +423,7 @@
 		this.playing = false;
 		if (this.frames &&
 			this.frames.length > 0 &&
-			this.canvas &&
+			this.elements.canvas &&
 			this.canvasImageData &&
 			this.canvasContext)
 			this.setFrame(0);
@@ -542,13 +545,15 @@
 		this.elements.loader = GIFUtils.elementCreate('DIV', { id: 'gifplayer-loader' });
 		this.elements.status = GIFUtils.elementCreate('DIV', { id: 'gifplayer-status' });
 		this.elements.action = GIFUtils.elementCreate('DIV', { id: 'gifplayer-action' });
+		this.elements.info = GIFUtils.elementCreate('DIV', { id: 'gifplayer-info' });
 		this.elements.container = GIFUtils.elementCreate('DIV', { id: 'gifplayer' }, undefined, [
 			this.elements.canvas,
 			this.elements.loader,
 			this.elements.previous,
 			this.elements.next,
 			this.elements.status,
-			this.elements.action
+			this.elements.action,
+			this.elements.info
 		]);
 		var body = document.getElementsByTagName('BODY')[0];
 		if (body) {

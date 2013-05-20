@@ -62,6 +62,9 @@
 
 		/* Short keys. */
 
+		window.onblur = function(e) {
+			self.commandKey = false;
+		}
 		document.onkeyup = function(e) {
 			switch (e.which) {
 				case 91: // Command
@@ -111,12 +114,14 @@
 					break;
 				case 38: // up
 					var size = parseFloat(self.elements.size.input.value);
-					self.player.setSize(parseFloat(size) + 0.02);
+					var value = e.shiftKey ? 0.1 : 0.02;
+					self.player.setSize(parseFloat(size) + value);
 					self.player.setAction('Size: '+Math.round(self.player.canvasSize*100)+'%');
 					break;
 				case 40: // down
 					var size = parseFloat(self.elements.size.input.value);
-					self.player.setSize(parseFloat(size) - 0.02);
+					var value = e.shiftKey ? 0.1 : 0.02;
+					self.player.setSize(parseFloat(size) - value);
 					self.player.setAction('Size: '+Math.round(self.player.canvasSize*100)+'%');
 					break;
 				case 76: // L
@@ -224,11 +229,21 @@
 					'title': 'Stop'
 				}
 			);
+			this.elements.close = GIFUtils.elementCreate('A',
+				{
+					'id': 'gifplayer-control-close',
+					'className': 'gifplayer-icon',
+					'href': '#',
+					'title': 'Close (esc)',
+					'innerHTML': '&times;'
+				}
+			);
 			this.elements.icons = GIFUtils.elementCreate('DIV', { 'id': 'gifplayer-icons' }, {}, [
 				this.elements.previous,
 				this.elements.play,
 				this.elements.stop,
-				this.elements.next
+				this.elements.next,
+				this.elements.close
 			]);
 
 			this.elements.scrub = {};
@@ -300,6 +315,10 @@
 
 			var self = this;
 			
+			this.elements.close.onclick = function(){
+				self.player.close();
+				return false;
+			};
 			this.elements.previous.onclick = function(){
 				self.previous();
 				return false;
@@ -344,7 +363,6 @@
 				scrubMouseDown(e);
 				self.elements.scrub.container.onmousemove = scrubMouseDown;
 				document.onmouseup = function(){
-					console.log('onmouseup');
 					document.onmouseup = null;
 					self.elements.scrub.container.onmousemove = null;
 					return false;

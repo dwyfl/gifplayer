@@ -15,48 +15,26 @@
         || (arr && arr !== Object.prototype && GIFUtils.isArray(arr.__proto__));
   }
   GIFUtils.elementAddClass = function(element, className) {
-    var classString = element.className || '';
-    var classArray = classString.split(' ');
-    var newClassArray = [className];
-    for (var i = 0; i < classArray.length; ++i) {
-      if (newClassArray.indexOf(classArray[i]) == -1)
-        newClassArray.push(classArray[i].trim());
-    }
-    element.className = newClassArray.join(' ');
+    element.classList.add(className);
   };
   GIFUtils.elementRemoveClass = function(element, className) {
-    var classString = element.className || '';
-    var classArray = classString.split(' ');
-    var newClassArray = [];
-    for (var i = 0; i < classArray.length; ++i) {
-      if (classArray[i] != className)
-        newClassArray.push(classArray[i].trim());
-    }
-    element.className = newClassArray.join(' ');
+    element.classList.remove(className);
   };
   GIFUtils.elementCreate = function(elementType, attributes, styles, children, innerText) {
     var element = document.createElement(elementType);
-    for (var i in attributes)
-      element[i] = attributes[i];
-    if (styles !== undefined)
-      GIFUtils.elementApplyStyles(element, styles);
-    for (var i = 0; children && i < children.length; ++i) {
+    GIFUtils.extendObject(element, attributes, true);
+    GIFUtils.extendObject(element.style, styles, true);
+    for (var i = 0; children && i < children.length; ++i)
       element.appendChild(children[i]);
-    }
     if (innerText !== undefined)
       element.innerText = innerText;
     return element;
-  };
-  GIFUtils.elementApplyStyles = function(element, styles) {
-    for (var i in styles) {
-      element.style[i] = styles[i];
-    }
   };
   GIFUtils.extendObject = function(object, extend, force) {
     if (!object)
       object = {};
     for (var i in extend) {
-      if (!object.hasOwnProperty(i) || force)
+      if (force || !object.hasOwnProperty(i))
         object[i] = extend[i];
     }
     return object;

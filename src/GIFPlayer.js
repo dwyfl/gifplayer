@@ -98,14 +98,13 @@
 					}
 				};
 				this.request.onreadystatechange = function(){
-					if (self.request && self.request.readyState == 4 && self.request.response) {
-						// if (self.request.status == 200 && self.request.response) {
+					if (this.readyState == 4 && this.response) {
 						self.loadDecodeStart();
 						var requestEnd = GIFUtils.timer();
 						var requestTime = Math.round((requestEnd - requestStart)*100)*0.01;
-						var requestSpeed = Math.round(10 * (self.request.response.byteLength / 1024) * 1000 / (requestEnd - requestStart)) * 0.1;
-						GIF.log('GIF: Fetched', GIFUtils.humanReadableBytes(self.request.response.byteLength), 'of data in', requestTime, 'ms ('+requestSpeed+' kb/s).');
-						var gif = new GIF(self.request.response,
+						var requestSpeed = Math.round(10 * (this.response.byteLength / 1024) * 1000 / (requestEnd - requestStart)) * 0.1;
+						GIF.log('GIF: Fetched', GIFUtils.humanReadableBytes(this.response.byteLength), 'of data in', requestTime, 'ms ('+requestSpeed+' kb/s).');
+						var gif = new GIF(this.response,
 							function(gif){
 								self.loadComplete(gif);
 							},

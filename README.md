@@ -6,7 +6,7 @@
 
 A JavaScript library for reading GIF images and rendering GIF animations in the browser using HTML5 Canvas. Contrary to other GIF parsers and LZW decoders in JavaScript, GIFPlayer uses typed arrays for improved performance.
 
-[Check out the demo.](https://rawgithub.com/dwyfl/gifplayer/master/demo/index.html)
+[Check out the demo.](https://dl.dropboxusercontent.com/u/3264935/gifplayer/demo/index.html)
 
 ## Acknowledgements
 

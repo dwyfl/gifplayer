@@ -1,4 +1,4 @@
-(function(){
+(function(global){
 
 	// According to GIF spec.
 	var LZW_MAX_CODE_SIZE = 12;
@@ -170,6 +170,6 @@
 		}
 	};
 
-	this.LZW = this.LZW || LZW;
+	global.LZW = global.LZW || LZW;
 
-})();
+})(this);

@@ -1,17 +1,16 @@
-(function(){
+(function(global){
 
 	/**
 	 * Controls for the GIFPlayer.
-	 * Requires jQuery (1.9.1), for now.
 	 **/
 	var GIFPlayerControls = function(player){
 		
 		this.player = player;
 		this.setupElements();
 
-		/* GIFPlayer event handlers. */
-		
 		var self = this;
+
+		/* GIFPlayer event handlers. */
 
 		this.player.on(GIFPlayer.GIF_EVENT_SET_FRAME, function(e){
 			self.setScrub(e);
@@ -372,6 +371,6 @@
 		}
 	};
 
-	this.GIFPlayerControls = this.GIFPlayerControls || GIFPlayerControls;
+	global.GIFPlayerControls = global.GIFPlayerControls || GIFPlayerControls;
 	
-})();
+})(this);

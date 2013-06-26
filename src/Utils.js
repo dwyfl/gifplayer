@@ -1,12 +1,5 @@
-(function(){
+(function(global){
 
-  window.requestAnimFrame = (function(){
-    return window.requestAnimationFrame       ||
-           window.webkitRequestAnimationFrame ||
-           window.mozRequestAnimationFrame    ||
-           function(callback){ window.setTimeout(callback, 1000 / 60); };
-  })();
-  ''
   var GIFUtils = {};
 
   GIFUtils.isArray = function(arr) {
@@ -53,14 +46,14 @@
     return Math.log(n)/GIFUtils.LN2;
   };
   GIFUtils.timer = (function(){
-    return performance === undefined ?
-      function(){ return (new Date()).getTime(); } :
-      function(){ return performance.now(); };
+    return typeof(performance) == 'object' && typeof(performance.now) == 'function' ?
+      function(){ return performance.now(); } :
+      function(){ return (new Date()).getTime(); };
   })();
 
-  this.GIFUtils = this.GIFUtils || GIFUtils;
+  global.GIFUtils = global.GIFUtils || GIFUtils;
 
-})();
+})(this);
 
 /*
 Copyright Joyent, Inc. and other Node contributors. All rights reserved.
@@ -83,9 +76,9 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
 */
 
-(function(){
+(function(global){
 
-  this.EventEmitter = function(){};
+  var EventEmitter = function(){};
 
   // By default EventEmitters will print a warning if more than
   // 10 listeners are added to it. This is a useful default which
@@ -275,5 +268,7 @@ IN THE SOFTWARE.
     }
     return this._events[type];
   };
-  return EventEmitter;
-})();
+
+  global.EventEmitter = global.EventEmitter || EventEmitter;
+
+})(this);

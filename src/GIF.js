@@ -1,4 +1,4 @@
-(function(){
+(function(global){
 
 	/**
 	 * Stream reader. Partially based on DataStream.js by kig:
@@ -62,7 +62,7 @@
 		this.progress = null;
 		this.parsing = false;
 
-		if (data && (data instanceof ArrayBuffer))
+		if (data)
 			this.parse(data, complete, progress, error);
 	};
 
@@ -168,10 +168,12 @@
 								eof = true;
 								break;
 							case 0x00: // Let's just keep going.
-								GIF.log('GIF: Unexpected block type at '+self.stream.position+', ignoring...');
+								GIF.log('GIF: Unexpected block type "0x00" at '+self.stream.position+', ignoring...');
 								break;
 							default:
-								throw new Error('GIF: Invalid GIF file. Unknown block type (' + sentinel + ').');
+								GIF.log('GIF: Unexpected block type "'+sentinel+'" at '+self.stream.position+', assuming EOF.');
+								eof = true;
+								break;
 						}
 						if (GIFUtils.timer() - updateTime > GIF.loadUpdateFrequency) {
 							updateTime = GIFUtils.timer();
@@ -381,5 +383,6 @@
 		}
 	};
 
-	this.GIF = this.GIF || GIF;
-})()
+	global.GIF = global.GIF || GIF;
+
+})(this)

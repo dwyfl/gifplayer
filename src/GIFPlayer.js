@@ -1,5 +1,12 @@
-(function(){
+(function(global){
 	
+	window.requestAnimFrame = (function(){
+		return window.requestAnimationFrame       ||
+			   window.webkitRequestAnimationFrame ||
+			   window.mozRequestAnimationFrame    ||
+			   function(callback){ window.setTimeout(callback, 1000 / 60); };
+	})();
+
 	var GIFPlayer = function(urls, options){
 		EventEmitter.call(this);
 		options = GIFUtils.extendObject(options, {
@@ -583,6 +590,6 @@
 		};
 	};
 	
-	this.GIFPlayer = this.GIFPlayer || GIFPlayer;
+	global.GIFPlayer = global.GIFPlayer || GIFPlayer;
 
-})();
+})(this);

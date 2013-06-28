@@ -61,6 +61,7 @@
 		this.complete = null;
 		this.progress = null;
 		this.parsing = false;
+		this.stopped = false;
 
 		if (data)
 			this.parse(data, complete, progress, error);
@@ -95,6 +96,10 @@
 			}
 		},
 
+		stop : function(){
+			this.stopped = true;
+		},
+
 		parse : function(arrayBuffer, complete, progress, error){
 
 			if (!(arrayBuffer instanceof ArrayBuffer))
@@ -111,6 +116,7 @@
 			GIF.log('GIF: Parsing GIF...');
 			var startTimeInMs = GIFUtils.timer();
 
+			this.stopped = false;
 			this.parsing = true;
 			this.data = arrayBuffer;
 			this.stream = new GIFStream(arrayBuffer);
@@ -141,7 +147,7 @@
 
 			var loop = function(){
 				try {
-					while (!eof) {
+					while (!eof && !self.stopped) {
 						var sentinel = self.stream.readUint8();
 						switch (sentinel) {
 							case 0x21: // '!'
@@ -168,10 +174,10 @@
 								eof = true;
 								break;
 							case 0x00: // Let's just keep going.
-								GIF.log('GIF: Unexpected block type "0x00" at '+self.stream.position+', ignoring...');
+								GIF.log('GIF: Unexpected block type "'+sentinel+'" at '+self.stream.position+', ignoring...');
 								break;
 							default:
-								GIF.log('GIF: Unexpected block type "'+sentinel+'" at '+self.stream.position+', assuming EOF.');
+								GIF.log('GIF: Unexpected block type "'+sentinel+'" at '+self.stream.position+'. Assuming end of file.');
 								eof = true;
 								break;
 						}

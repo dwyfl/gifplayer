@@ -55,6 +55,8 @@
 	};
 
 	GIFPlayer.prototype.killRequest = function(){
+		if (this.gif)
+			this.gif.stop();
 		this.request.onprogress = null;
 		this.request.onreadystatechange = null;
 		this.request.abort();

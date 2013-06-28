@@ -81,8 +81,7 @@
 	right: auto;
 	margin: 0 auto;
 	white-space: nowrap;
-	/*min-width: 250px;*/
-	max-width: 33%;
+	max-width: 250px;
 	background: rgba(0,0,0,0.5);
 	padding: 8px 16px;
 	text-align: left;
@@ -92,8 +91,10 @@
 	line-height: 1.5em;
 	color: #fff;
 	opacity: 0;
-	-webkit-transition: opacity 0.2s ease-out;
-	-webkit-user-select: none;
+	-webkit-transition: opacity 0.2s ease-out, max-width 0.5s ease-in-out;
+}
+#gifplayer-info:hover {
+	max-width: calc(100% - 92px);
 }
 #gifplayer.controls > #gifplayer-info {
 	opacity: 1;

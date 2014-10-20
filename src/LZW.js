@@ -17,25 +17,6 @@
 		reset : function(){
 			this.position = 0;
 		},
-
-		peekBit : function() {
-			var byteValue = this.byteBuffer[this.position >> 3];
-			var byteOffset = this.position & 0x07;
-			return (byteValue >> byteOffset) & 1;
-		},
-
-		peekBits : function(length) {
-			var position = this.position;
-			var value = 0;
-			var shift = 0;
-			while (shift < length) {
-				value = value | (this.peekBit() << shift++);
-				this.position++;
-			}
-			this.position = position;
-			return value;
-		},
-
 		read : function(length) {
 			if (this.bytePosition >= this.byteBuffer.byteLength)
 				return null;
